@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 import sqlite3
 
 
@@ -18,8 +19,10 @@ class Login(tk.Tk):
      
         username_label = tk.Label(self, text="Nazwa użytkownika:").pack()
         username_entry = tk.Entry(self, textvariable=self.username).pack()
+        self.username.set("admin")
         password_label = tk.Label(self, text="Hasło").pack()
-        password_entry = tk.Entry(self, textvariable=self.password, show="*").pack()     
+        password_entry = tk.Entry(self, textvariable=self.password, show="*").pack()
+        self.password.set("1234")
         login_button = tk.Button(self, text="Zaloguj się", command= self.login).pack()
 
 
@@ -43,8 +46,6 @@ class Login(tk.Tk):
                 Switch()
             else:
                 messagebox.showerror("Błąd logowania", "Nazwa użytkownika albo hasło jest nieprawidłowe!")
-
-
 
 
 
@@ -100,11 +101,11 @@ class Profile(tk.Frame):
         tk.Frame.__init__(self, master)
         self.connection = sqlite3.connect('database.db')
         self.con = self.connection.cursor()
-
         tk.Button(self, text="Cofnij",
-                  command=lambda: master.switch_frame(Menu)).pack(side="top", fill="y", pady=100, padx=100)
+                  command=lambda: master.switch_frame(Menu)).pack()
 
         self.show()
+        button=tk.Button(self, text="Edytuj",command=self.update).pack()
 
     def show(self):
         data = self.read()
@@ -121,6 +122,61 @@ class Profile(tk.Frame):
         self.con.execute("select * from profile where id=1")
         return self.con.fetchall()
 
+    def update(self):
+        window = tk.Toplevel()
+        db=sqlite3.connect('database.db')
+        c=db.cursor()
+        result=c.execute("select * from profile where id=1")
+
+        for index in result:
+            nazwa=tk.StringVar()
+            ulica=tk.StringVar()
+            kod=tk.StringVar()
+            miasto = tk.StringVar()
+            nip = tk.StringVar()
+            telefon = tk.StringVar()
+                             
+            nazwa_label=tk.Label(window,text="Nazwa").pack()                
+            nazwa_entry=tk.Entry(window,textvariable=nazwa)
+            nazwa_entry.insert(0,index[1])
+            nazwa_entry.pack()
+
+            ulica_label=tk.Label(window,text="Ulica").pack()
+            ulica_entry=tk.Entry(window,textvariable=ulica)
+            ulica_entry.insert(0,index[2])
+            ulica_entry.pack()
+
+            kod_label=tk.Label(window,text="Kod pocztowy").pack()
+            kod_entry=tk.Entry(window,textvariable=kod)
+            kod_entry.insert(0,index[3])
+            kod_entry.pack()
+
+            miasto_label=tk.Label(window,text="Miasto").pack()
+            miasto_entry=tk.Entry(window,textvariable=miasto)
+            miasto_entry.insert(0,index[4])
+            miasto_entry.pack()
+
+            nip_label=tk.Label(window,text="NIP").pack()
+            nip_entry=tk.Entry(window,textvariable=nip)
+            nip_entry.insert(0,index[5])
+            nip_entry.pack()
+
+            telefon_label=tk.Label(window,text="Telefon").pack()
+            telefon_entry=tk.Entry(window,textvariable=telefon)
+            telefon_entry.insert(0,index[6])
+            telefon_entry.pack()
+        
+        def updatedetail():
+            db=sqlite3.connect('database.db')
+            c=db.cursor()
+            c.execute("update profile set nazwa='"+nazwa.get()+"',ulica='"+ulica.get()+"',kod='"+kod.get()+"',miasto='"+miasto.get()+"',nip='"+nip.get()+"',telefon='"+telefon.get()+"' where id=1")
+            db.commit()
+            db.close()
+            window.withdraw()
+            messagebox.showinfo('Sukces','Profil właściciela został zaktualizowany.')
+        
+        button=tk.Button(window, text="Zaktualizuj", command=updatedetail).pack()
+
 
 
 ### Widok KLIENTÓW ###
@@ -129,6 +185,7 @@ class Profile(tk.Frame):
 
 class Client(tk.Frame):
     def __init__(self, master):
+        tk.Frame.__init__(self, master)
         tk.Frame.__init__(self, master)
         tk.Label(self, text="Coś tu prędzej, czy później będzie...").pack(side="top", fill="x", pady=100)
         tk.Button(self, text="Cofnij",
