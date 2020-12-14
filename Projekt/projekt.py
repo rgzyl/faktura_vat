@@ -15,16 +15,34 @@ class Login(tk.Tk):
     def __init__(self, *args, **kwargs):        
         tk.Tk.__init__(self, *args, **kwargs)
 
+        title = tk.Label(self, text="Faktura VAT", font=("Calibri", 24, 'bold'))
+        title.pack(padx=100, pady=100)
+
+        labelframe = tk.LabelFrame(self, text="Panel logowania", padx=10, pady=10, font=("Calibri", 12))  
+        labelframe.pack()
+
         self.username = tk.StringVar()
         self.password = tk.StringVar()
      
-        username_label = tk.Label(self, text="Nazwa użytkownika:").pack()
-        username_entry = tk.Entry(self, textvariable=self.username).pack()
+        username_label = tk.Label(labelframe, text="Nazwa użytkownika: ", width=20, font=("Calibri", 12))
+        username_label.grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
+        
+        username_entry = tk.Entry(labelframe, textvariable=self.username, width=25, font=("Calibri", 12))
+        username_entry.grid(row=0, column=1, sticky=tk.W, padx=5, pady=5)
         self.username.set("admin")
-        password_label = tk.Label(self, text="Hasło").pack()
-        password_entry = tk.Entry(self, textvariable=self.password, show="*").pack()
+        
+        password_label = tk.Label(labelframe, text="Hasło: ", width=20, font=("Calibri", 12))
+        password_label.grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
+        
+        password_entry = tk.Entry(labelframe, textvariable=self.password, show="*", width=25, font=("Calibri", 12))
+        password_entry.grid(row=1, column=1, sticky=tk.W, padx=5, pady=5)
         self.password.set("1234")
-        login_button = tk.Button(self, text="Zaloguj się", command= self.login).pack()
+        
+        login_button = tk.Button(labelframe, text="Zaloguj się", command= self.login, width=20, font=("Calibri", 12))
+        login_button.grid(row=2, column=0, sticky=tk.W, padx=5, pady=5)
+
+        data = tk.Label(self, text="Autorzy: Radosław Gzyl, Mateusz Trzebiński, Maciej Jopek, Kamil Stefaniuk, Zuzanna Lenczyk-Wąsowska", font=("Calibri", 8, ""))
+        data.pack(side=tk.BOTTOM, pady=10)
 
 
     def login(self):
@@ -47,8 +65,6 @@ class Login(tk.Tk):
                 Switch()
             else:
                 messagebox.showerror("Błąd logowania", "Nazwa użytkownika albo hasło jest nieprawidłowe!")
-
-
 
 
 
@@ -83,15 +99,15 @@ class Switch(tk.Tk):
 class Menu(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-        tk.Label(self, text="Faktura VAT").pack(side="top", fill="x", pady=100, padx=100)
+
         tk.Button(self, text="Konto użytkownika",
-                  command=lambda: master.switch_frame(Profile)).pack()
+                  command=lambda: master.switch_frame(Profile)).pack(side=tk.LEFT)
         tk.Button(self, text="Klienci",
-                  command=lambda: master.switch_frame(Client)).pack()
+                  command=lambda: master.switch_frame(Client)).pack(side=tk.LEFT)
         tk.Button(self, text='Produkty',
-                  command=lambda: master.switch_frame(Product)).pack()
+                  command=lambda: master.switch_frame(Product)).pack(side=tk.LEFT)
         tk.Button(self, text="Zamknij",
-                  command=lambda: master.close()).pack()
+                  command=lambda: master.close()).pack(side=tk.LEFT)
 
 
 
@@ -120,6 +136,7 @@ class Profile(tk.Frame):
             #tk.Label(self, text=dat[4]).pack()
             tk.Label(self, text="NIP: " + dat[5]).pack()
             tk.Label(self, text="Telefon: +48 " + dat[6]).pack()
+            tk.Label(self, text="Telefon").pack()
         
     def read(self):
         self.con.execute("select * from profile where id=1")
