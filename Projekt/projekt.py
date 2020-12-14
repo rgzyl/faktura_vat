@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
+from tkinter import tix
 import sqlite3
 
 
@@ -103,13 +104,11 @@ class Profile(tk.Frame):
         tk.Frame.__init__(self, master)
         self.connection = sqlite3.connect('database.db')
         self.con = self.connection.cursor()
-
-        tk.Button(self, text="Edytuj", command=self.update).pack()
+        tk.Button(self, text="Cofnij",
+                  command=lambda: master.switch_frame(Menu)).pack()
 
         self.show()
-
-        tk.Button(self, text="Cofnij",
-            command=lambda: master.switch_frame(Menu)).pack(side="top", fill="y")
+        button=tk.Button(self, text="Edytuj",command=self.update).pack()
 
     def show(self):
         data = self.read()
@@ -171,13 +170,16 @@ class Profile(tk.Frame):
             telefon_entry.pack()
         
         def updatedetail():
-            db=sqlite3.connect('database.db')
-            c=db.cursor()
-            c.execute("update profile set nazwa='"+nazwa.get()+"',ulica='"+ulica.get()+"',kod='"+kod.get()+"',miasto='"+miasto.get()+"',nip='"+nip.get()+"',telefon='"+telefon.get()+"' where id=1")
-            db.commit()
-            db.close()
-            window.withdraw()
-            messagebox.showinfo('Sukces','Profil właściciela został zaktualizowany.')
+            if nazwa.get()=="" or ulica.get()=="" or kod.get()=="" or miasto.get()=="" or nip.get()=="" or telefon.get()=="":
+                messagebox.showerror('Błąd','Wszystkie pola powinny zostać uzupełnione.')
+            else:
+                db=sqlite3.connect('database.db')
+                c=db.cursor()
+                c.execute("update profile set nazwa='"+nazwa.get()+"',ulica='"+ulica.get()+"',kod='"+kod.get()+"',miasto='"+miasto.get()+"',nip='"+nip.get()+"',telefon='"+telefon.get()+"' where id=1")
+                db.commit()
+                db.close()
+                window.withdraw()
+                messagebox.showinfo('Sukces','Profil właściciela został zaktualizowany.')
         
         button=tk.Button(window, text="Zaktualizuj", command=updatedetail).pack()
 
@@ -191,15 +193,92 @@ class Client(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
 
+        tk.Label(self, text="TABELA KLIENCI").pack(side="top")
+        rama_tabela = tk.Frame(self)
+        rama_tabela.pack(side="top", expand="yes")
 
-        self.nabywca = tk.StringVar(self)
-        self.ulica = tk.StringVar(self)
-        self.miasto = tk.StringVar(self)
-        self.kod = tk.StringVar(self)
-        self.wybor2 = tk.StringVar(self)
-        self.id = tk.StringVar(self)
+        self.my_show(rama_tabela, 0)
 
-        frame_napisy = tk.Frame(self)  # Ramka z napisami pol
+        tk.Button(self, text="Cofnij", command=lambda: master.switch_frame(Menu)).pack()
+        tk.Button(self, text="Dodaj", command=lambda: self.okno_zapisz()).pack(side="bottom", pady=5,padx=5)
+
+
+
+    def my_show(self, w, offset):  # Tabelka
+        limit = 8
+        q = "SELECT * from clients LIMIT " + str(offset) + "," + str(limit)
+        h = "select count(*) from clients"
+        i=0
+        with sqlite3.connect("database.db") as db:  # Wypisanie recordow
+            c = db.cursor()
+            c.execute(q)
+            r_set = c.fetchall()
+            c.execute(h)
+            no_rec = c.fetchone()[0]
+            c.close()
+        l = ["ID",
+             "NABYWCA",
+             "NIP",
+             "REGON",
+             "VAT EU",
+             "PESEL",
+             "NUMER FIRMY",
+             "OSOBA FIZYCZNA",
+             "ULICA",
+             "MIASTO/KOD"]
+
+        r_set.insert(0, l)  # Dodanie nazw kolumn
+
+        for client in r_set:
+            for j in range(len(client)):
+                e = tk.Label(w, text=client[j], width=9, fg='black')
+                e.grid(row=i, column=j)
+
+            if r_set.index(client) != 0:
+                e = tk.Button(w, text='EDIT', command=lambda d=client[0]: self.update(d))
+                e.grid(row=i, column=j + 1)
+                f = tk.Button(w, text='DELETE', command=lambda d=client[0]: self.usun(d))
+                f.grid(row=i, column=j + 2)
+            i = i + 1
+
+        while (i < limit):  # required to blank the balance rows if they are less
+            for j in range(10):
+                e = tk.Label(w, text=" ", width=9)
+                e.grid(row=i, column=j)
+
+            i = i + 1
+
+            # Show buttons
+        back = offset - limit  # This value is used by Previous button
+        next = offset + limit  # This value is used by Next button
+        b1 = tk.Button(w, text='Next >', command=lambda: self.my_show(w,next))
+        b1.grid(row=12, column=10)
+        b2 = tk.Button(w, text='< Prev', command=lambda: self.my_show(w, back))
+        b2.grid(row=12, column=1)
+
+        if (no_rec <= next):
+            b1["state"] = "disabled"  # disable next button
+        else:
+            b1["state"] = "active"  # enable next button
+
+        if (back >= 0):
+            b2["state"] = "active"  # enable Prev button
+        else:
+            b2["state"] = "disabled"  # disable Prev button
+
+
+
+    def okno_zapisz(self):  # Nowe okno do zapisu
+        okno = tk.Toplevel(self)
+        okno.resizable(0, 0)  
+        okno.nabywca = tk.StringVar(okno)
+        okno.ulica = tk.StringVar(okno)
+        okno.miasto = tk.StringVar(okno)
+        okno.kod = tk.StringVar(okno)
+        okno.wybor2 = tk.StringVar(okno)
+        okno.id = tk.StringVar(okno)
+
+        frame_napisy = tk.Frame(okno)  # Ramka z napisami pol
         frame_napisy.pack(side="left", fill="both")
         tk.Label(frame_napisy, text="Nabywca").pack(pady = 5, padx = 5)
         tk.Label(frame_napisy, text="Ulica").pack(pady = 5, padx = 5)
@@ -207,76 +286,53 @@ class Client(tk.Frame):
         tk.Label(frame_napisy, text="Kod").pack(pady = 5, padx = 5)
 
         choices = ("NIP", "REGON", "VAT EU", "PESEL", "Numer firmy", "Osoba fizyczna")
-        self.variable = tk.StringVar(self)
-        self.variable.set("Osoba fizyczna")
-        tk.OptionMenu(frame_napisy, self.variable, *choices, command=self.choice).pack(pady = 5, padx = 5)
+        okno.variable = tk.StringVar(okno)
+        okno.variable.set("Osoba fizyczna")
+        tk.OptionMenu(frame_napisy, okno.variable, *choices, command=self.choice).pack(pady = 5, padx = 5)
 
-
-        frame_entry = tk.Frame(self)  # Ramka z polami
+        frame_entry = tk.Frame(okno)  # Ramka z polami
         frame_entry.pack(side="left", fill="both")
-        tk.Entry(frame_entry, textvariable=self.nabywca).pack(pady = 5, padx = 5)
-        tk.Entry(frame_entry, textvariable=self.ulica).pack(pady = 8, padx = 5)
-        tk.Entry(frame_entry, textvariable=self.miasto).pack(pady = 4, padx = 5)
-        tk.Entry(frame_entry, textvariable=self.kod).pack(pady = 9, padx = 5)
-        self.pole_do_wpisania_wyboru = tk.Entry(frame_entry, textvariable=self.wybor2)
+        tk.Entry(frame_entry, textvariable=okno.nabywca).pack(pady = 5, padx = 5)
+        tk.Entry(frame_entry, textvariable=okno.ulica).pack(pady = 8, padx = 5)
+        tk.Entry(frame_entry, textvariable=okno.miasto).pack(pady = 4, padx = 5)
+        tk.Entry(frame_entry, textvariable=okno.kod).pack(pady = 9, padx = 5)
+        self.pole_do_wpisania_wyboru = tk.Entry(frame_entry, textvariable=okno.wybor2)
 
 
-        frame_id = tk.Frame(self)  # Ramka z ID
-        frame_id.pack(side="left")
-        tk.Label(frame_id, text="ID").pack(pady = 5, padx = 5)
-        tk.Entry(frame_id, textvariable=self.id).pack(side="bottom",pady=5, padx = 5)
+        tk.Button(okno, text="ZAPISZ", command=lambda : self.zapisz(okno) ).pack(side="bottom", pady = 5, padx = 5)
 
 
-        tk.Button(self, text="DELETE", command=lambda : self.usun(self.id.get())).pack(side="bottom", pady = 5, padx = 5)
-        tk.Button(self, text="UPDATE", command=lambda: self.update(self.id.get())).pack(side="bottom", pady = 5, padx = 5)
-        tk.Button(self, text="ZAPISZ", command=self.zapisz).pack(side="bottom", pady = 5, padx = 5)
+    def zapisz(self, okno):  # Funkcja zapisu
+        nabywca = okno.nabywca.get() if okno.nabywca.get() != "" else "-"
 
-
-        tk.Button(self, text="Cofnij", command=lambda: master.switch_frame(Menu)).pack()
-        with sqlite3.connect("database.db") as db:  # Wypisanie recordow
-            c = db.cursor()
-            c.execute("select * from clients")
-            wynik = c.fetchall()
-            c.close()
-
-        wyniki = tk.Toplevel(self)
-        total_rows = len(wynik)
-        total_columns = len(wynik[0])
-
-        for i in range(total_rows):
-            for j in range(total_columns):
-                self.e = tk.Entry(wyniki, width=10, fg='blue',
-                               font=('Arial', 10, 'bold'))
-                self.e.insert(-1, wynik[i][j])
-                self.e.configure(state='readonly')
-                self.e.grid(row=i, column=j)
-
-
-
-
-    def zapisz(self):
-        nabywca = self.nabywca.get() if self.nabywca.get() != "" else "-"
-
-        if self.variable.get() == "Osoba fizyczna":
-            wybor = "T"
+        if okno.nabywca.get()=="" or okno.ulica.get()=="" or okno.kod.get()=="" or okno.miasto.get()=="" or okno.wybor2.get()=="":
+            messagebox.showerror('Błąd', 'Sprawdź, czy wszystkie pola zostały uzupełnione.')
         else:
-            wybor = self.wybor2.get() if self.wybor2.get() != "" else "-"
+            if okno.variable.get() == "Osoba fizyczna":
+                wybor = "T"
+            else:
+                wybor = okno.wybor2.get() if okno.wybor2.get() != "" else "-"
 
-        ulica = self.ulica.get() if self.ulica.get() != "" else "-"
-        kod_miasto = self.kod.get()+" "+self.miasto.get() if self.kod.get() != "" and self.miasto.get() != "" else "-"
+            ulica = okno.ulica.get() if okno.ulica.get() != "" else "-"
+            kod_miasto = okno.kod.get()+" "+okno.miasto.get() if okno.kod.get() != "" and okno.miasto.get() != "" else "-"
+        
+            text = messagebox.showinfo('Sukces','Rekord dodano prawidłowo.')
+            if text:
+                query = (f"insert into clients('nabywca', '{okno.variable.get().replace(' ','_')}', 'ulica', 'miasto_kod')values('{nabywca}', '{wybor}', '{ulica}', '{kod_miasto}')")
+                with sqlite3.connect("database.db") as db:
+                    c = db.cursor()
+                    c.execute(query)
+                    c.close()
+                okno.withdraw()
 
-        query = (f"insert into clients('nabywca', '{self.variable.get() if self.variable.get() != 'Osoba fizyczna' else 'osoba_fizyczna'}', 'ulica', 'miasto_kod')values('{nabywca}', '{wybor}', '{ulica}', '{kod_miasto}')")
-
-        with sqlite3.connect("database.db") as db:
-            c = db.cursor()
-            c.execute(query)
-            c.close()
 
     def usun(self, id_client):
-        with sqlite3.connect("database.db") as db:
-            c = db.cursor()
-            c.execute(f"delete from clients where c_id = {id_client}")
-            c.close()
+        text=messagebox.askyesnocancel("Usuń","Czy na pewno chcesz usunąć rekord?",icon='warning',default='no')
+        if text:
+            with sqlite3.connect("database.db") as db:
+                c = db.cursor()
+                c.execute(f"delete from clients where c_id = {id_client}")
+                c.close()
 
     def update(self, id_client):  # Nowe okno do update
         window = tk.Toplevel(self)
