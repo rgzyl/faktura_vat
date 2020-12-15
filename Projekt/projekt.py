@@ -216,10 +216,9 @@ class Client(tk.Frame):
 
         tk.Label(self, text="TABELA KLIENCI").pack(side="top")
         rama_tabela = tk.Frame(self)
-        rama_tabela.pack(side="top", expand="yes")
-
         self.my_show(rama_tabela, 0)
-
+        rama_tabela.pack(side="top", expand="yes")
+        
         tk.Button(self, text="Cofnij", command=lambda: master.switch_frame(Menu)).pack()
         tk.Button(self, text="Dodaj", command=lambda: self.okno_zapisz()).pack(side="bottom", pady=5,padx=5)
 
@@ -326,7 +325,7 @@ class Client(tk.Frame):
     def zapisz(self, okno):  # Funkcja zapisu
         nabywca = okno.nabywca.get() if okno.nabywca.get() != "" else "-"
 
-        if okno.nabywca.get()=="" or okno.ulica.get()=="" or okno.kod.get()=="" or okno.miasto.get()=="" or okno.wybor2.get()=="":
+        if okno.nabywca.get()=="" or okno.ulica.get()=="" or okno.kod.get()=="" or okno.miasto.get()=="":
             messagebox.showerror('Błąd', 'Sprawdź, czy wszystkie pola zostały uzupełnione.')
         else:
             if okno.variable.get() == "Osoba fizyczna":
@@ -451,26 +450,66 @@ class Client(tk.Frame):
 class Product(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-        #tk.Label(self, text="Coś tu prędzej, czy później będzie...").pack(side="top", fill="x", pady=100)
-        tk.Button(self, text="Cofnij",
-                  command=lambda: master.switch_frame(Menu)).pack(side="top", fill="y", pady=100, padx=100)
 
-        tk.Label(self, text="TABELA Z PRODUKTAMI").pack(side="top")
+        tk.Label(self, text="Faktura VAT - produkty", font=("Calibri", 24, "bold")).pack(pady=10)
+
+        tk.Button(self, text="COFNIJ", font=("Calibri", 14, "bold"), bg="grey",
+                  command=lambda: master.switch_frame(Menu)).pack(side="bottom", fill="x", pady=10, padx=10)
+
+        tk.Button(self, text="DODAJ NOWY PRODUKT", command=self.insert_window, font=("Calibri", 14, "bold")).pack(padx=20, pady=20, side="top", fill='x')
+
+        tk.Label(self, text="TABELA Z PRODUKTAMI", font=("Calibri", 14, "bold")).pack(side="top")
         frame = tk.Frame(self)
-        frame.pack(side="bottom", expand="yes")
+        self.table(frame, 0)
+        frame.pack()
 
-        self.table(frame)
+    
+    def insert_window(self):
+        window = tk.Toplevel(self)
+        window.resizable(0, 0)  
+        window.name = tk.StringVar(window)
+        window.price = tk.StringVar(window)
 
-        #tk.Button(self, text="Cofnij", command=lambda: master.switch_frame(Menu)).pack()
+        title= tk.Label(window, text="Formularz dodawania nowego produktu:", font=("Calibri", 12), justify=tk.LEFT)
+        title.grid(row=0, columnspan=2, padx=5, pady=5, sticky = tk.W)
+
+        name_label = tk.Label(window, text="Nazwa", font=("Calibri", 12), justify=tk.LEFT)
+        name_label.grid(row=1, column=0, padx=5, pady=5, sticky = tk.W)
+        name_entry = tk.Entry(window, textvariable=window.name, font=("Calibri", 12), width=30)
+        name_entry.grid(row=1, column=1, padx=5, pady=5, sticky = tk.W)
+
+        price_label = tk.Label(window, text="Cena brutto", font=("Calibri", 12), justify=tk.LEFT)
+        price_label.grid(row=2, column=0, padx=5, pady=5, sticky = tk.W)
+        price_entry = tk.Entry(window, textvariable=window.price, font=("Calibri", 12), width=30)
+        price_entry.grid(row=2, column=1, padx=5, pady=5, sticky = tk.W)
+
+        button = tk.Button(window, text="Dodaj", command=lambda: self.insert(window), font=("Calibri", 12), width=10)
+        button.grid(row=3, column=0, padx=5, pady=5, sticky = tk.W)
+        
+
+    def insert(self, window):
+        name = window.name.get()
+        price = window.price.get()
+
+        if price=="" or name=="":
+            messagebox.showerror('Błąd', 'Sprawdź, czy wszystkie pola zostały uzupełnione.')
+        else:  
+            text = messagebox.showinfo('Sukces','Rekord dodano prawidłowo.')
+            if text:
+                query = (f"insert into products('name', 'price') values ('{name}', '{price}')")
+                with sqlite3.connect("database.db") as db:
+                    c = db.cursor()
+                    c.execute(query)
+                    c.close()
+                window.withdraw()
     
 
-    def table(self, w):  # Tabelka
-        limit = 10
-        offset = 0
+    def table(self, w, offset):  
+        limit = 8
         q = "SELECT * from products LIMIT " + str(offset) + "," + str(limit)
         h = "select count(*) from products"
         i=0
-        with sqlite3.connect("database.db") as db:
+        with sqlite3.connect("database.db") as db:  
             c = db.cursor()
             c.execute(q)
             r_set = c.fetchall()
@@ -479,46 +518,96 @@ class Product(tk.Frame):
             c.close()
         l = ["Lp.",
              "Nazwa",
-             "Cena netto"]
+             "Cena brutto"]
 
-        r_set.insert(0, l)
+        r_set.insert(0, l)  
 
-        for client in r_set:
-            for j in range(len(client)):
-                e = tk.Label(w, text=client[j], width=9, fg='black')
+        for product in r_set:
+            for j in range(len(product)):
+                e = tk.Label(w, text=product[j], width=12, fg='black', font=("Calibri", 12))
                 e.grid(row=i, column=j)
 
-            if r_set.index(client) != 0:
-                e = tk.Button(w, text='EDYTUJ', command=lambda d=client[0]: self.update(d))
+            if r_set.index(product) != 0:
+                e = tk.Button(w, text='Edytuj', command=lambda d=product[0]: self.update(d), font=("Calibri", 12))
                 e.grid(row=i, column=j + 1)
-                f = tk.Button(w, text='USUŃ', command=lambda d=client[0]: self.usun(d))
+                f = tk.Button(w, text='Usuń', command=lambda d=product[0]: self.delete(d), font=("Calibri", 12))
                 f.grid(row=i, column=j + 2)
             i = i + 1
 
-        while (i < limit):  
+        while (i < limit): 
             for j in range(10):
-                e = tk.Label(w, text=" ", width=9)
+                e = tk.Label(w, text=" ", width=12)
                 e.grid(row=i, column=j)
 
             i = i + 1
 
-            
         back = offset - limit  
         next = offset + limit  
-        b1 = tk.Button(w, text='Następny >', command=lambda: self.table(w,next))
-        b1.grid(row=12, column=3)
-        b2 = tk.Button(w, text='< Poprzedni', command=lambda: self.table(w, back))
+        b1 = tk.Button(w, text='Następny >', command=lambda: self.table(w, next), font=("Calibri", 12))
+        b1.grid(row=12, column=3, pady=10)
+        b2 = tk.Button(w, text='< Poprzedni', command=lambda: self.table(w, back), font=("Calibri", 12))
         b2.grid(row=12, column=1)
 
         if (no_rec <= next):
             b1["state"] = "disabled"  
         else:
-            b1["state"] = "active"
+            b1["state"] = "active"  
 
         if (back >= 0):
-            b2["state"] = "active"
+            b2["state"] = "active"  
         else:
             b2["state"] = "disabled"  
+
+    def delete(self, id_product):
+        text=messagebox.askyesnocancel("Usuń","Czy na pewno chcesz usunąć rekord?",icon='warning',default='no')
+        if text:
+            with sqlite3.connect("database.db") as db:
+                c = db.cursor()
+                c.execute(f"delete from products where id = {id_product}")
+                c.close()
+
+    def update(self, id_product):
+        window = tk.Toplevel()
+        window.resizable(0, 0)
+        db=sqlite3.connect('database.db')
+        c=db.cursor()
+        query=c.execute(f"select * from products where id= {id_product}")
+
+        title= tk.Label(window, text="Formularz edycji produktu:", font=("Calibri", 12), justify=tk.LEFT)
+        title.grid(row=0, columnspan=2, padx=5, pady=5, sticky = tk.W)
+
+        for i in query:
+            nazwa=tk.StringVar()
+            cena=tk.StringVar()
+                             
+            nazwa_label=tk.Label(window,text="Nazwa", font=("Calibri", 12), justify=tk.LEFT)
+            nazwa_label.grid(row=1, column=0, padx=5, pady=5, sticky = tk.W)
+            nazwa_entry=tk.Entry(window,textvariable=nazwa, font=("Calibri", 12), width=30)
+            nazwa_entry.insert(0,i[1])
+            nazwa_entry.grid(row=1, column=1, padx=5, pady=5, sticky = tk.W)
+
+            cena_label=tk.Label(window,text="Cena brutto", font=("Calibri", 12), justify=tk.LEFT)
+            cena_label.grid(row=2, column=0, padx=5, pady=5, sticky = tk.W)
+            cena_entry=tk.Entry(window,textvariable=cena, font=("Calibri", 12), width=30)
+            cena_entry.insert(0,i[2])
+            cena_entry.grid(row=2, column=1, padx=5, pady=5, sticky = tk.W)
+       
+        def updatedetail(id_product):
+            if nazwa.get()=="" or cena.get()=="":
+                messagebox.showerror('Błąd','Wszystkie pola powinny zostać uzupełnione.')
+            else:
+                db=sqlite3.connect('database.db')
+                c=db.cursor()
+                c.execute("update products set name='"+nazwa.get()+"',price='"+cena.get()+"' where id='"+str(id_product)+"'")
+                db.commit()
+                db.close()
+                window.withdraw()
+                messagebox.showinfo('Sukces','Produkt został zaktualizowany.')
+
+        button=tk.Button(window, text="Zaktualizuj", command=lambda: updatedetail(id_product), font=("Calibri", 12), width=10)
+        button.grid(row=3, column=0, padx=5, pady=5, sticky = tk.W)
+        
+
 
 
 
