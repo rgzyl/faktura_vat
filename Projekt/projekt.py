@@ -100,14 +100,18 @@ class Menu(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
 
-        tk.Button(self, text="Konto użytkownika",
+
+        tk.Label(self, text="Faktura VAT", font=("Calibri", 24, "bold")).pack(pady=10)
+        tk.Button(self, text="Konto użytkownika", font=("Calibri", 16, "bold"),
                   command=lambda: master.switch_frame(Profile)).pack(side=tk.LEFT)
-        tk.Button(self, text="Klienci",
+        tk.Button(self, text="Klienci", font=("Calibri", 16, "bold"),
                   command=lambda: master.switch_frame(Client)).pack(side=tk.LEFT)
-        tk.Button(self, text='Produkty',
+        tk.Button(self, text='Produkty', font=("Calibri", 16, "bold"),
                   command=lambda: master.switch_frame(Product)).pack(side=tk.LEFT)
-        tk.Button(self, text="Zamknij",
+        tk.Button(self, text="Zamknij", font=("Calibri", 16, "bold"),
                   command=lambda: master.close()).pack(side=tk.LEFT)
+
+
 
 
 
@@ -447,9 +451,74 @@ class Client(tk.Frame):
 class Product(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-        tk.Label(self, text="Coś tu prędzej, czy później będzie...").pack(side="top", fill="x", pady=100)
+        #tk.Label(self, text="Coś tu prędzej, czy później będzie...").pack(side="top", fill="x", pady=100)
         tk.Button(self, text="Cofnij",
                   command=lambda: master.switch_frame(Menu)).pack(side="top", fill="y", pady=100, padx=100)
+
+        tk.Label(self, text="TABELA Z PRODUKTAMI").pack(side="top")
+        frame = tk.Frame(self)
+        frame.pack(side="bottom", expand="yes")
+
+        self.table(frame)
+
+        #tk.Button(self, text="Cofnij", command=lambda: master.switch_frame(Menu)).pack()
+    
+
+    def table(self, w):  # Tabelka
+        limit = 10
+        offset = 0
+        q = "SELECT * from products LIMIT " + str(offset) + "," + str(limit)
+        h = "select count(*) from products"
+        i=0
+        with sqlite3.connect("database.db") as db:
+            c = db.cursor()
+            c.execute(q)
+            r_set = c.fetchall()
+            c.execute(h)
+            no_rec = c.fetchone()[0]
+            c.close()
+        l = ["Lp.",
+             "Nazwa",
+             "Cena netto"]
+
+        r_set.insert(0, l)
+
+        for client in r_set:
+            for j in range(len(client)):
+                e = tk.Label(w, text=client[j], width=9, fg='black')
+                e.grid(row=i, column=j)
+
+            if r_set.index(client) != 0:
+                e = tk.Button(w, text='EDYTUJ', command=lambda d=client[0]: self.update(d))
+                e.grid(row=i, column=j + 1)
+                f = tk.Button(w, text='USUŃ', command=lambda d=client[0]: self.usun(d))
+                f.grid(row=i, column=j + 2)
+            i = i + 1
+
+        while (i < limit):  
+            for j in range(10):
+                e = tk.Label(w, text=" ", width=9)
+                e.grid(row=i, column=j)
+
+            i = i + 1
+
+            
+        back = offset - limit  
+        next = offset + limit  
+        b1 = tk.Button(w, text='Następny >', command=lambda: self.table(w,next))
+        b1.grid(row=12, column=3)
+        b2 = tk.Button(w, text='< Poprzedni', command=lambda: self.table(w, back))
+        b2.grid(row=12, column=1)
+
+        if (no_rec <= next):
+            b1["state"] = "disabled"  
+        else:
+            b1["state"] = "active"
+
+        if (back >= 0):
+            b2["state"] = "active"
+        else:
+            b2["state"] = "disabled"  
 
 
 
