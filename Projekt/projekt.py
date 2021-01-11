@@ -102,7 +102,7 @@ class Menu(tk.Frame):
 
 
         tk.Label(self, text="Faktura VAT", font=("Calibri", 24, "bold")).pack(pady=10)
-        tk.Button(self, text="Konto użytkownika", font=("Calibri", 16, "bold"),
+        tk.Button(self, text="Panel użytkownika", font=("Calibri", 16, "bold"),
                   command=lambda: master.switch_frame(Profile)).pack(side=tk.LEFT)
         tk.Button(self, text="Klienci", font=("Calibri", 16, "bold"),
                   command=lambda: master.switch_frame(Client)).pack(side=tk.LEFT)
@@ -113,41 +113,170 @@ class Menu(tk.Frame):
 
 
 
-
-
 ### Widok KONTA UŻYTKOWNIKA ###
 
 
 
 class Profile(tk.Frame):
     def __init__(self, master):
-        tk.Frame.__init__(self, master)
-        self.connection = sqlite3.connect('database.db')
-        self.con = self.connection.cursor()
-        tk.Button(self, text="Cofnij",
-                  command=lambda: master.switch_frame(Menu)).pack()
+        tk.Frame.__init__(self, master)            
 
-        self.show()
-        button=tk.Button(self, text="Edytuj",command=self.update).pack()
-
-    def show(self):
-        data = self.read()
-        for index, dat in enumerate(data):
-            #tk.Label(self, text=dat[0]).pack()
-            tk.Label(self, text="Nazwa firmy: " + dat[1]).pack()
-            tk.Label(self, text="Adres: " + dat[2]).pack()
-            tk.Label(self, text=dat[3] + " " + dat[4]).pack()
-            #tk.Label(self, text=dat[4]).pack()
-            tk.Label(self, text="NIP: " + dat[5]).pack()
-            tk.Label(self, text="Telefon: +48 " + dat[6]).pack()
-            tk.Label(self, text="Telefon").pack()
+        tk.Label(self, text="Faktura VAT - panel użytkownika", font=("Calibri", 24, "bold")).pack(pady=20)
         
-    def read(self):
-        self.con.execute("select * from profile where id=1")
-        return self.con.fetchall()
+        labelframe = tk.LabelFrame(self, text="Panel użytkownika", font=("Calibri", 12, "bold"))
+        labelframe.pack(padx=10, pady=10)
+
+        frame = tk.LabelFrame(self, text="Dane logowania", font=("Calibri", 12, 'bold'))
+        frame.pack(padx=10, pady=10)
+
+        con = sqlite3.connect('database.db')
+        c = con.cursor()
+        query = c.execute('SELECT * FROM profile WHERE id=1')
+        
+        for dat in query:           
+            nazwa_opis = tk.Label(labelframe, text="Nazwa firmy", font=("Calibri", 12))
+            nazwa_opis.grid(row=0, column=0, sticky=tk.W, padx=10, pady=5)
+            nazwa = tk.Label(labelframe, text=dat[1], font=("Calibri", 12))
+            nazwa.grid(row=0, column=1, padx=10, pady=5)
+            
+            ulica_opis = tk.Label(labelframe, text="Adres siedziby", font=("Calibri", 12))
+            ulica_opis.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+            ulica = tk.Label(labelframe, text=dat[2], font=("Calibri", 12))
+            ulica.grid(row=1, column=1, padx=10, pady=5)
+            
+            kod_opis = tk.Label(labelframe, text="Kod pocztowy/miasto", font=("Calibri", 12))
+            kod_opis.grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
+            kod = tk.Label(labelframe, text=dat[3]+" "+dat[4], font=("Calibri", 12))
+            kod.grid(row=2, column=1, padx=10, pady=5)
+            
+            telefon_opis = tk.Label(labelframe, text="Telefon kontaktowy", font=("Calibri", 12))
+            telefon_opis.grid(row=3, column=0, sticky=tk.W, padx=10, pady=5)
+            telefon = tk.Label(labelframe, text="+48 "+dat[6], font=("Calibri", 12))
+            telefon.grid(row=3, column=1, padx=10, pady=5)
+            
+            nip_opis = tk.Label(labelframe, text="Numer identyfikacji podatkowej", font=("Calibri", 12))
+            nip_opis.grid(row=4, column=0, sticky=tk.W, padx=10, pady=5)
+            nip = tk.Label(labelframe, text=dat[5], font=("Calibri", 12))
+            nip.grid(row=4, column=1, padx=10, pady=5)
+
+            edit_profile_button = tk.Button(labelframe, text="Edytuj panel użytkownika",command=self.update, font=('Calibri', 12), width=90)
+            edit_profile_button.grid(row=5, columnspan=2, padx=15, pady=15)
+        
+        edit_login_button = tk.Button(frame, text="Zaktualizuj/zmień nazwe użytkownika",command=self.login, font=('Calibri', 12), width=90)
+        edit_login_button.grid(padx=15, pady=10)
+
+        edit_password_button = tk.Button(frame, text="Zaktualizuj/zmień hasło",command=self.password, font=('Calibri', 12), width=90)
+        edit_password_button.grid(padx=15, pady=10)
+
+        button = tk.Button(self, text="Cofnij", font=('Calibri', 12, 'bold'), bg="grey",
+            command=lambda: master.switch_frame(Menu))
+        button.pack(fill="x", padx=5, pady=20, side=tk.BOTTOM)
+            
+        
+    def password(self):
+        window = tk.Toplevel()
+        window.resizable(0,0)
+
+        old_password = tk.StringVar()
+        password = tk.StringVar()
+        re_password = tk.StringVar()
+        
+        title=tk.Label(window, text="Formularz zmiany hasła w panelu użytkownika", font=("Calibri", 12, "bold"))
+        title.grid(row=0, columnspan=2, padx=5, pady=5, sticky=tk.W)
+
+        password_label=tk.Label(window, text="Podaj obecne hasło", font=("Calibri", 12))
+        password_label.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+        password_entry=tk.Entry(window, textvariable=old_password, font=("Calibri", 12), width=30, show="*")
+        password_entry.grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
+
+        new_password_label=tk.Label(window, text="Podaj nowe hasło", font=("Calibri", 12))
+        new_password_label.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+        new_password_entry=tk.Entry(window, textvariable=password, font=("Calibri", 12), width=30, show="*")
+        new_password_entry.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
+
+        re_new_password_label=tk.Label(window, text="Powtórz nowe hasło", font=("Calibri", 12))
+        re_new_password_label.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+        re_new_password_entry=tk.Entry(window, textvariable=re_password, font=("Calibri", 12), width=30, show="*")
+        re_new_password_entry.grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
+        
+        
+        def password_update():
+            if old_password.get()=="" or password.get()=="" or re_password.get()=="":
+                messagebox.showerror('Błąd','Wszystkie pola powinny zostać uzupełnione.')
+            else:
+                with sqlite3.connect("database.db") as db:
+                    c = db.cursor()
+                    c.execute("select password from user where id=1")
+                    try:
+                        haslo = c.fetchone()[0]
+                    except Exception:
+                        haslo = " "
+                    if old_password.get() == str(haslo) and password.get() == re_password.get():
+                        c.execute("update user set password='"+password.get()+"' where id=1")
+                        c.close()
+                        window.withdraw()
+                        messagebox.showinfo("Sukces", "Hasło zostało zaktualizowane.")
+                    else:
+                        messagebox.showerror("Błąd", "Wprowadzono nieprawidłowe dane. Spróbuj ponownie.")
+                        
+
+        button = tk.Button(window, text="Zaktualizuj", font=("Calibri",12), width=18, command=password_update)
+        button.grid(row=4, column=0, padx=10, pady=10)
+
+
+    def login(self):
+        window = tk.Toplevel()
+        window.resizable(0,0)
+
+        window.old_login = tk.StringVar()
+        window.login = tk.StringVar()
+        window.re_login = tk.StringVar()
+        
+        title=tk.Label(window, text="Formularz zmiany nazwy użytkownika w panelu użytkownika", font=("Calibri", 12, "bold"))
+        title.grid(row=0, columnspan=2, padx=5, pady=5, sticky=tk.W)
+
+        login_label=tk.Label(window, text="Podaj obecną nazwę użytkownika", font=("Calibri", 12))
+        login_label.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+        login_entry=tk.Entry(window, textvariable=window.old_login, font=("Calibri", 12), width=40)
+        login_entry.grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
+
+        new_login_label=tk.Label(window, text="Podaj nową nazwę użytkownika", font=("Calibri", 12))
+        new_login_label.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+        new_login_entry=tk.Entry(window, textvariable=window.login, font=("Calibri", 12), width=40)
+        new_login_entry.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
+
+        re_new_login_label=tk.Label(window, text="Powtórz nowa nazwę użytkownika", font=("Calibri", 12))
+        re_new_login_label.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+        re_new_login_entry=tk.Entry(window, textvariable=window.re_login, font=("Calibri", 12), width=40)
+        re_new_login_entry.grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
+
+        button = tk.Button(window, text="Zaktualizuj", font=("Calibri",12), width=26, command=lambda: self.login_update(window))
+        button.grid(row=4, column=0, padx=10, pady=10)
+              
+    def login_update(self, window):
+        if window.old_login.get()=="" or window.login.get()=="" or window.re_login.get()=="":
+            messagebox.showerror('Błąd','Wszystkie pola powinny zostać uzupełnione.')
+        else:
+            with sqlite3.connect("database.db") as db:
+                c = db.cursor()
+                c.execute("select username from user where id=1")
+                try:
+                    login = c.fetchone()[0]
+                except Exception:
+                    login = " "
+                if window.old_login.get() == str(login) and window.login.get() == window.re_login.get():
+                    c.execute("update user set username='"+window.login.get()+"' where id=1")
+                    c.close()
+                    window.withdraw()
+                    messagebox.showinfo("Sukces", "Nazwa użytkownika została zaktualizowana.")
+                else:
+                    messagebox.showerror("Błąd", "Wprowadzono nieprawidłowe dane. Spróbuj ponownie.")
+                        
+
 
     def update(self):
         window = tk.Toplevel()
+        window.resizable(0,0)
         db=sqlite3.connect('database.db')
         c=db.cursor()
         result=c.execute("select * from profile where id=1")
@@ -159,36 +288,46 @@ class Profile(tk.Frame):
             miasto = tk.StringVar()
             nip = tk.StringVar()
             telefon = tk.StringVar()
+
+            title = tk.Label(window, text="Formularz edytowania danych panelu użytkownika", font=("Calibri", 12, "bold"))
+            title.grid(row=0, columnspan=2, padx=5, pady=5, sticky=tk.W)
                              
-            nazwa_label=tk.Label(window,text="Nazwa").pack()                
-            nazwa_entry=tk.Entry(window,textvariable=nazwa)
+            nazwa_label=tk.Label(window,text="Nazwa firmy", font=("Calibri", 12))
+            nazwa_label.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)                
+            nazwa_entry=tk.Entry(window,textvariable=nazwa, font=("Calibri", 12), width=35)
             nazwa_entry.insert(0,index[1])
-            nazwa_entry.pack()
+            nazwa_entry.grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
 
-            ulica_label=tk.Label(window,text="Ulica").pack()
-            ulica_entry=tk.Entry(window,textvariable=ulica)
+            ulica_label=tk.Label(window,text="Adres siedziby", font=("Calibri", 12))
+            ulica_label.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+            ulica_entry=tk.Entry(window,textvariable=ulica, font=("Calibri", 12), width=35)
             ulica_entry.insert(0,index[2])
-            ulica_entry.pack()
+            ulica_entry.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
 
-            kod_label=tk.Label(window,text="Kod pocztowy").pack()
-            kod_entry=tk.Entry(window,textvariable=kod)
+            kod_label=tk.Label(window,text="Kod pocztowy", font=("Calibri", 12))
+            kod_label.grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+            kod_entry=tk.Entry(window,textvariable=kod, font=("Calibri", 12), width=35)
             kod_entry.insert(0,index[3])
-            kod_entry.pack()
+            kod_entry.grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
 
-            miasto_label=tk.Label(window,text="Miasto").pack()
-            miasto_entry=tk.Entry(window,textvariable=miasto)
+            miasto_label=tk.Label(window,text="Miasto", font=("Calibri", 12))
+            miasto_label.grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
+            miasto_entry=tk.Entry(window,textvariable=miasto, font=("Calibri", 12), width=35)
             miasto_entry.insert(0,index[4])
-            miasto_entry.pack()
+            miasto_entry.grid(row=4, column=1, padx=5, pady=5, sticky=tk.W)
 
-            nip_label=tk.Label(window,text="NIP").pack()
-            nip_entry=tk.Entry(window,textvariable=nip)
-            nip_entry.insert(0,index[5])
-            nip_entry.pack()
-
-            telefon_label=tk.Label(window,text="Telefon").pack()
-            telefon_entry=tk.Entry(window,textvariable=telefon)
+            telefon_label=tk.Label(window,text="Telefon kontaktowy", font=("Calibri", 12))
+            telefon_label.grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
+            telefon_entry=tk.Entry(window,textvariable=telefon, font=("Calibri", 12), width=35)
             telefon_entry.insert(0,index[6])
-            telefon_entry.pack()
+            telefon_entry.grid(row=6, column=1, padx=5, pady=5, sticky=tk.W)
+
+            nip_label=tk.Label(window,text="Numer identyfikacji podatkowej", font=("Calibri", 12))
+            nip_label.grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
+            nip_entry=tk.Entry(window,textvariable=nip, font=("Calibri", 12), width=35)
+            nip_entry.insert(0,index[5])
+            nip_entry.grid(row=5, column=1, padx=5, pady=5, sticky=tk.W)
+            
         
         def updatedetail():
             if nazwa.get()=="" or ulica.get()=="" or kod.get()=="" or miasto.get()=="" or nip.get()=="" or telefon.get()=="":
@@ -202,7 +341,8 @@ class Profile(tk.Frame):
                 window.withdraw()
                 messagebox.showinfo('Sukces','Profil właściciela został zaktualizowany.')
         
-        button=tk.Button(window, text="Zaktualizuj", command=updatedetail).pack()
+        button=tk.Button(window, text="Zaktualizuj", command=updatedetail, font=("Calibri", 12), width=28)
+        button.grid(row=7, column=0, padx=10, pady=10)
 
 
 
@@ -226,7 +366,7 @@ class Client(tk.Frame):
 
     def my_show(self, w, offset):  # Tabelka
         limit = 8
-        q = "SELECT * from clients LIMIT " + str(offset) + "," + str(limit)
+        q = "SELECT C_ID, Nabywca from clients LIMIT " + str(offset) + "," + str(limit)
         h = "select count(*) from clients"
         i=0
         with sqlite3.connect("database.db") as db:  # Wypisanie recordow
@@ -237,15 +377,7 @@ class Client(tk.Frame):
             no_rec = c.fetchone()[0]
             c.close()
         l = ["ID",
-             "NABYWCA",
-             "NIP",
-             "REGON",
-             "VAT EU",
-             "PESEL",
-             "NUMER FIRMY",
-             "OSOBA FIZYCZNA",
-             "ULICA",
-             "MIASTO/KOD"]
+             "NABYWCA"]
 
         r_set.insert(0, l)  # Dodanie nazw kolumn
 
@@ -255,10 +387,12 @@ class Client(tk.Frame):
                 e.grid(row=i, column=j)
 
             if r_set.index(client) != 0:
-                e = tk.Button(w, text='EDIT', command=lambda d=client[0]: self.update(d))
+                e = tk.Button(w, text='DETAIL')
                 e.grid(row=i, column=j + 1)
-                f = tk.Button(w, text='DELETE', command=lambda d=client[0]: self.usun(d))
+                f = tk.Button(w, text='DELETE', command=lambda d=client[0]: self.update(d))
                 f.grid(row=i, column=j + 2)
+                f = tk.Button(w, text='DELETE', command=lambda d=client[0]: self.usun(d))
+                f.grid(row=i, column=j + 3)
             i = i + 1
 
         while (i < limit):  # required to blank the balance rows if they are less
@@ -456,14 +590,15 @@ class Product(tk.Frame):
         tk.Button(self, text="COFNIJ", font=("Calibri", 14, "bold"), bg="grey",
                   command=lambda: master.switch_frame(Menu)).pack(side="bottom", fill="x", pady=10, padx=10)
 
-        tk.Button(self, text="DODAJ NOWY PRODUKT", command=self.insert_window, font=("Calibri", 14, "bold")).pack(padx=20, pady=20, side="top", fill='x')
+        tk.Button(self, text="DODAJ NOWY PRODUKT", command=self.insert_window, font=("Calibri", 14, "bold")).pack(padx=20, pady=0, side="top", fill='x')
+        tk.Button(self, text="ODŚWIEŻ TABELĘ", command=lambda: master.switch_frame(Product), font=("Calibri", 14)).pack(padx=20, pady=15, side="top", fill='x')
 
         tk.Label(self, text="TABELA Z PRODUKTAMI", font=("Calibri", 14, "bold")).pack(side="top")
         frame = tk.Frame(self)
         self.table(frame, 0)
         frame.pack()
 
-    
+        
     def insert_window(self):
         window = tk.Toplevel(self)
         window.resizable(0, 0)  
