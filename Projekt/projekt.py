@@ -1,8 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
-from tkinter import tix
+from tkinter import tix as tx
 import sqlite3
+from tkscrolledframe import ScrolledFrame
 
 
 
@@ -102,7 +103,7 @@ class Switch(tk.Tk):
 class Menu(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-
+        
         ttk.Label(self, text="Faktura VAT", font=("Calibri", 24, "bold")).pack(pady=20)
 
         style = ttk.Style(self)
@@ -174,7 +175,7 @@ class Profile(tk.Frame):
             nip = ttk.Label(labelframe, text=dat[5], font=("Calibri", 12))
             nip.grid(row=4, column=1, padx=10, pady=5)
 
-            edit_profile_button = ttk.Button(labelframe, text="Edytuj panel użytkownika",command=self.update, width=80, style="normal.TButton")
+            edit_profile_button = ttk.Button(labelframe, text="Edytuj panel użytkownika",command=lambda: self.update(master), width=80, style="normal.TButton")
             edit_profile_button.grid(row=5, columnspan=2, padx=15, pady=15)
         
         edit_login_button = ttk.Button(frame, text="Zaktualizuj/zmień nazwe użytkownika",command=self.login, width=80, style="normal.TButton")
@@ -293,7 +294,7 @@ class Profile(tk.Frame):
                         
 
 
-    def update(self):
+    def update(self, master):
         window = tk.Toplevel()
         window.resizable(0,0)
         db=sqlite3.connect('database.db')
@@ -359,6 +360,7 @@ class Profile(tk.Frame):
                 db.close()
                 window.withdraw()
                 messagebox.showinfo('Sukces','Profil użytkownika został zaktualizowany.')
+                master.switch_frame(Profile)
         
         normal = ttk.Style(window)
         normal.configure("normal.TButton", font=("Calibri", 12))
@@ -685,25 +687,68 @@ class Product(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
 
-        normal = ttk.Style(self)
+        sf = ScrolledFrame(self, width=800, height=600)
+        sf.pack(side="top", expand=1, fill="both")
+        
+        sf.bind_arrow_keys(self)
+        sf.bind_scroll_wheel(self)
+
+        frame = sf.display_widget(tk.Frame)
+                
+        normal = ttk.Style(frame)
         normal.configure("normal.TButton", font=("Calibri", 14))
 
-        bold = ttk.Style(self)
+        bold = ttk.Style(frame)
         bold.configure("bo.TButton", font=("Calibri", 14, "bold"))
 
-        ttk.Label(self, text="Faktura VAT - produkty", font=("Calibri", 24, "bold")).pack(pady=20)
+        ttk.Label(frame, text="Faktura VAT - produkty", font=("Calibri", 24, "bold"), anchor="center").grid(pady=20, padx=235, columnspan=6)
 
-        ttk.Button(self, text="COFNIJ", style="bo.TButton", 
-                  command=lambda: master.switch_frame(Menu)).pack(side="bottom", fill="x", pady=10, padx=10)
 
-        ttk.Button(self, text="DODAJ NOWY PRODUKT", command=self.insert_window, style="normal.TButton").pack(padx=20, pady=0, side="top", fill='x')
+        ttk.Button(frame, text="DODAJ NOWY PRODUKT", command=self.insert_window, style="normal.TButton").grid(padx=5, pady=10, columnspan=6, sticky="nswe")
 
-        ttk.Button(self, text="ODŚWIEŻ", command=lambda: master.switch_frame(Product), style="normal.TButton").pack(padx=20, pady=10, side="top", fill='x') 
+        ttk.Button(frame, text="ODŚWIEŻ", command=lambda: master.switch_frame(Product), style="normal.TButton").grid(padx=5, columnspan=6, sticky="nswe")
 
-        ttk.Label(self, text="TABELA Z PRODUKTAMI", font=("Calibri", 14, "bold")).pack(side="top", pady=10)
-        frame = tk.Frame(self)
-        self.table(frame, 0)
-        frame.pack()
+        ttk.Label(frame, text="TABELA Z PRODUKTAMI", font=("Calibri", 14, "bold"), anchor="center").grid(pady=20, padx=0, columnspan=6)
+
+        self.table(frame)
+
+        ttk.Button(frame, text="COFNIJ", style="bo.TButton",
+                   command=lambda: master.switch_frame(Menu)).grid(pady=10, padx=5, columnspan=6, sticky="nswe")
+
+    def table(self, w):  
+        limit = 8
+        q = "SELECT * from products" 
+        h = "select count(*) from products"
+        i=0
+
+        normal = ttk.Style(w)
+        normal.configure("nor.TButton", font=("Calibri", 12))
+
+        
+        with sqlite3.connect("database.db") as db:  
+            c = db.cursor()
+            c.execute(q)
+            r_set = c.fetchall()
+            c.execute(h)
+            no_rec = c.fetchone()[0]
+            c.close()
+        l = ["ID",
+             "Nazwa",
+             "Cena brutto (zł)"]
+
+        r_set.insert(0, l)  
+
+        for product in r_set:
+            for j in range(len(product)):
+                e = ttk.Label(w, text=product[j], font=("Calibri", 12))
+                e.grid(row=i+4, column=j, padx=10, pady=3)
+
+            if r_set.index(product) != 0:
+                f = ttk.Button(w, text='EDYTUJ', command=lambda d=product[0]: self.update(d), style="nor.TButton")
+                f.grid(row=i+4, column=j + 2)
+                f = ttk.Button(w, text='USUŃ', command=lambda d=product[0]: self.delete(d), style="nor.TButton")
+                f.grid(row=i+4, column=j + 3, padx=5, pady=3)
+            i = i + 1
 
         
     def insert_window(self):
@@ -747,64 +792,7 @@ class Product(tk.Frame):
                     c.execute(query)
                     c.close()
                 window.withdraw()
-    
 
-    def table(self, w, offset):  
-        limit = 8
-        q = "SELECT * from products LIMIT " + str(offset) + "," + str(limit)
-        h = "select count(*) from products"
-        i=0
-        with sqlite3.connect("database.db") as db:  
-            c = db.cursor()
-            c.execute(q)
-            r_set = c.fetchall()
-            c.execute(h)
-            no_rec = c.fetchone()[0]
-            c.close()
-        l = ["Lp.",
-             "Nazwa",
-             "Cena brutto"]
-
-        r_set.insert(0, l)
-
-        bold = ttk.Style(self)
-        bold.configure("bold.TButton", font=("Calibri", 12))
-
-        for product in r_set:
-            for j in range(len(product)):
-                e = ttk.Label(w, text=product[j], font=("Calibri", 12))
-                e.grid(row=i, column=j)
-
-            if r_set.index(product) != 0:
-                e = ttk.Button(w, text='Edytuj', command=lambda d=product[0]: self.update(d), style="bold.TButton")
-                e.grid(row=i, column=j + 1, padx=10)
-                f = ttk.Button(w, text='Usuń', command=lambda d=product[0]: self.delete(d), style="bold.TButton")
-                f.grid(row=i, column=j + 2)
-            i = i + 1
-
-        while (i < limit): 
-            for j in range(10):
-                e = ttk.Label(w, text=" ", width=12)
-                e.grid(row=i, column=j)
-
-            i = i + 1
-
-        back = offset - limit  
-        next = offset + limit  
-        b1 = ttk.Button(w, text='Następny >', command=lambda: self.table(w, next), style="bold.TButton")
-        b1.grid(row=12, column=3, pady=10)
-        b2 = ttk.Button(w, text='< Poprzedni', command=lambda: self.table(w, back), style="bold.TButton")
-        b2.grid(row=12, column=1)
-
-        if (no_rec <= next):
-            b1["state"] = "disabled"  
-        else:
-            b1["state"] = "active"  
-
-        if (back >= 0):
-            b2["state"] = "active"  
-        else:
-            b2["state"] = "disabled"  
 
     def delete(self, id_product):
         text=messagebox.askyesnocancel("Usuń","Czy na pewno chcesz usunąć rekord?",icon='warning',default='no')
