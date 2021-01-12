@@ -8,7 +8,6 @@ from tkcalendar import *
 
 
 
-
 ### Panel logowania ###
 
 
@@ -502,42 +501,89 @@ class Invoice(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
 
-        ttk.Label(self, text="Faktura VAT - szczegóły", font=("Calibri", 24, "bold")).pack(pady=30)
-
-        frame = tk.Frame(self)
-        frame.pack()
+        sf = ScrolledFrame(self, width=800, height=600)
+        sf.pack(side="top", expand=1, fill="both")
         
-        self.name = tk.StringVar(self)
-        self.surname = tk.StringVar(self)
-        self.age = tk.StringVar(self)
-        self.city = tk.StringVar(self)
+        sf.bind_arrow_keys(self)
+        sf.bind_scroll_wheel(self)
 
-        name_l = tk.Label(frame, text="Enter the name: ", font=("Calibri", 12)).grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
-        surname_l = tk.Label(frame, text="Enter the surname: ", font=("Calibri", 12)).grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
-        age_l = tk.Label(frame, text="Enter the age: ", font=("Calibri", 12)).grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
-        city_l = tk.Label(frame, text="Enter the city: ", font=("Calibri", 12)).grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+        frame = sf.display_widget(tk.Frame)
+                
+        normal = ttk.Style(frame)
+        normal.configure("normal.TButton", font=("Calibri", 14))
 
-        name_e = tk.Entry(frame, textvariable=self.name, font=("Calibri", 12), width=30).grid(row=0, column=1, padx=5, pady=5)
-        surname_e = tk.Entry(frame, textvariable=self.surname, font=("Calibri", 12), width=30).grid(row=1, column=1, padx=5, pady=5)
-        age_e = tk.Entry(frame, textvariable=self.age, font=("Calibri", 12), width=30).grid(row=2, column=1, padx=5, pady=5)
-        city_e = tk.Entry(frame, textvariable=self.city, font=("Calibri", 12), width=30).grid(row=3, column=1, padx=5, pady=5)
+        bold = ttk.Style(frame)
+        bold.configure("bo.TButton", font=("Calibri", 14, "bold"))
 
-        dodaj = tk.Button(frame, text="DODAJ", command=self.insert, font=("Calibri", 12, "bold")).grid(row=4, columnspan=2, sticky="nsew")
+        ttk.Label(frame, text="Faktura VAT - szczegóły", font=("Calibri", 24, "bold"), anchor="center").grid(pady=20, padx=232, columnspan=6)
 
-        bold = ttk.Style(self)
-        bold.configure("bold.TButton", font=("Calibri", 14, "bold"))
+        ttk.Button(frame, text="ODŚWIEŻ", command=lambda: master.switch_frame(Invoice), style="normal.TButton").grid(padx=5, columnspan=6, sticky="nswe")
 
-        button = ttk.Button(self, text="Cofnij", command=lambda: master.switch_frame(Menu), style="bold.TButton")
-        button.pack(fill="x", padx=5, pady=20, side=tk.BOTTOM)
+        ttk.Label(frame, text="TABELA Z FAKTURAMI", font=("Calibri", 14, "bold"), anchor="center").grid(pady=20, padx=0, columnspan=6)
 
-    def insert(self):
+        self.table(frame)
 
-        if self.name.get() == "" or self.surname.get() == "":
-            messagebox.showerror("Błąd", "Wystapił nieoczekiwany błąd")
-        else:
-            messagebox.showinfo("Sukces", "Pola nie są puste")
+        ttk.Button(frame, text="COFNIJ", style="bo.TButton",
+                   command=lambda: master.switch_frame(Menu)).grid(pady=10, padx=5, columnspan=6, sticky="nswe")
+
+
+    def table(self, w):  
+        limit = 8
+        q = "SELECT id, number, nabywca from invoice" 
+        h = "select count(*) from invoice"
+        i=0
+
+        normal = ttk.Style(w)
+        normal.configure("normaa.TButton", font=("Calibri", 12))
+
         
+        with sqlite3.connect("database.db") as db:  
+            c = db.cursor()
+            c.execute(q)
+            r_set = c.fetchall()
+            c.execute(h)
+            no_rec = c.fetchone()[0]
+            c.close()
+        l = ["ID",
+             "Numer faktury",
+             "Nabywca"]
 
+        r_set.insert(0, l)  
+
+        for invoice in r_set:
+            for j in range(len(invoice)):
+                e = ttk.Label(w, text=invoice[j], font=("Calibri", 12))
+                e.grid(row=i+4, column=j, padx=10, pady=3)
+
+            if r_set.index(invoice) != 0:
+                f = ttk.Button(w, text='SZCZEGÓŁY', command=lambda d=invoice[0]: self.detail(d), style="normaa.TButton")
+                f.grid(row=i+4, column=j + 1)
+                f = ttk.Button(w, text='EDYTUJ', command=lambda d=invoice[0]: self.update(d), style="normaa.TButton")
+                f.grid(row=i+4, column=j + 2)
+                f = ttk.Button(w, text='USUŃ', command=lambda d=invoice[0]: self.delete(d), style="normaa.TButton")
+                f.grid(row=i+4, column=j + 3, pady=3)
+            i = i + 1
+
+
+    def detail(self, id_invoice):
+        window = tk.TopLevel(self)
+        window.resizable(0,0)
+
+
+    def update(self, id_invoice):
+        window = tk.TopLevel(self)
+        window.resizable(0,0)
+
+
+    def delete(self, id_invoice):
+        text=messagebox.askyesnocancel("Usuń","Czy na pewno chcesz usunąć fakture?",icon='warning',default='no')
+        if text:
+            with sqlite3.connect("database.db") as db:
+                c = db.cursor()
+                c.execute(f"delete from invoice where id = {id_invoice}")
+                c.close()
+
+            
 
 ### Widok KONTA UŻYTKOWNIKA ###
 
