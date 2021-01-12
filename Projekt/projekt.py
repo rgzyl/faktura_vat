@@ -5,6 +5,7 @@ from tkinter import tix as tx
 import sqlite3
 from tkscrolledframe import ScrolledFrame
 from tkcalendar import *
+import datetime
 
 
 
@@ -286,28 +287,34 @@ class Menu(tk.Frame):
         self.sposob = tk.StringVar(self)
         self.termin = tk.StringVar(self)
 
-        numer_label = ttk.Label(frame, text="Numer faktury", font=("Calibri", 12))
-        numer_label.grid(padx=5, pady=5, row=0, column=0, sticky=tk.W)
-        numer_entry = ttk.Entry(frame, width=27, textvariable=self.numer, font=("Calibri", 12))
-        numer_entry.grid(padx=5, pady=5, row=0, column=1, sticky=tk.W)
+        db=sqlite3.connect('database.db')
+        c=db.cursor()
+        query=c.execute("SELECT number FROM invoice ORDER BY number DESC LIMIT 1;")
 
-        wystawiona_label = ttk.Label(frame, text="Data wystawienia", font=("Calibri", 12))
+        for i in query:
+            numer_label = ttk.Label(frame, text="Numer faktury:", font=("Calibri", 12))
+            numer_label.grid(padx=5, pady=5, row=0, column=0, sticky=tk.W)
+            numer_entry = ttk.Entry(frame, width=27, textvariable=self.numer, font=("Calibri", 12))
+            numer_entry.insert(0, str(int(i[0])+int(1)))
+            numer_entry.grid(padx=5, pady=5, row=0, column=1, sticky=tk.W)
+
+        wystawiona_label = ttk.Label(frame, text="Data wystawienia:", font=("Calibri", 12))
         wystawiona_label.grid(padx=5, pady=5, row=1, column=0, sticky=tk.W)
         wystawiona_entry = DateEntry(frame, width=25, textvariable=self.wystawienia,  font=("Calibri", 12), locale='en_US', date_pattern='dd-mm-y')  
         wystawiona_entry.grid(padx=5, pady=5, row=1, column=1, sticky=tk.W)
 
-        sprzedaz_label = ttk.Label(frame, text="Data sprzedaży", font=("Calibri", 12))
+        sprzedaz_label = ttk.Label(frame, text="Data sprzedaży:", font=("Calibri", 12))
         sprzedaz_label.grid(padx=5, pady=5, row=0, column=2, sticky=tk.W)
         sprzedaz_entry = DateEntry(frame, width=25, textvariable=self.sprzedaz, font=("Calibri", 12), locale='en_US', date_pattern='dd-mm-y')
         sprzedaz_entry.grid(padx=5, pady=5, row=0, column=3, sticky=tk.W)
 
-        miejsce_label = ttk.Label(frame, text="Miejsce wystawienia", font=("Calibri", 12))
+        miejsce_label = ttk.Label(frame, text="Miejsce wystawienia:", font=("Calibri", 12))
         miejsce_label.grid(padx=5, pady=5, row=1, column=2, sticky=tk.W)
         miejsce_entry = ttk.Entry(frame, width=27, textvariable=self.miejsce, font=("Calibri", 12))
         miejsce_entry.insert(0, "Wrocław")
         miejsce_entry.grid(padx=5, pady=5, row=1, column=3, sticky=tk.W)
 
-        sposob_label = ttk.Label(frame, text="Sposób zapłaty", font=("Calibri", 12))
+        sposob_label = ttk.Label(frame, text="Sposób zapłaty:", font=("Calibri", 12))
         sposob_label.grid(padx=5, pady=5, row=2, column=0, sticky=tk.W)
             
         sposob_combobox = ttk.Combobox(frame, textvariable=self.sposob, font=("Calibri", 12), width=25)
@@ -315,7 +322,7 @@ class Menu(tk.Frame):
         sposob_combobox['values'] = ('Gotówka', ' Przelew') 
         sposob_combobox.current(0) 
 
-        termin_label = ttk.Label(frame, text="Termin zapłaty", font=("Calibri", 12))
+        termin_label = ttk.Label(frame, text="Termin zapłaty:", font=("Calibri", 12))
         termin_label.grid(padx=5, pady=5, row=2, column=2, sticky=tk.W)
         termin_entry = DateEntry(frame, width=25, textvariable=self.termin,  font=("Calibri", 12), locale='en_US', date_pattern='dd-mm-y')  
         termin_entry.grid(padx=5, pady=5, row=2, column=3, sticky=tk.W)
@@ -329,7 +336,7 @@ class Menu(tk.Frame):
         self.osoba = tk.StringVar(self)
 
             
-        ulica_label = ttk.Label(window, width=18, text="Ulica:", font=("Calibri", 12))
+        ulica_label = ttk.Label(window, width=17, text="Ulica:", font=("Calibri", 12))
         ulica_label.grid(padx=5, pady=5, row=0, column=2, sticky=tk.W)
         ulica_entry = ttk.Entry(window, width=27 ,state="readonly", textvariable=self.ulica, font=("Calibri", 12))
         ulica_entry.grid(padx=5, pady=5, row=0, column=3, sticky=tk.W)
@@ -342,7 +349,7 @@ class Menu(tk.Frame):
         osoba_entry = ttk.Entry(window, width=27, state="readonly", textvariable=self.osoba, font=("Calibri", 12))
         osoba_entry.grid(padx=5, pady=5, row=1, column=3, sticky=tk.W)
                     
-        nabywca_name = ttk.Label(window, width=14, text="Nabywca:", font=("Calibri", 12))
+        nabywca_name = ttk.Label(window, width=15, text="Nabywca:", font=("Calibri", 12))
         nabywca_name.grid(padx=5, pady=5, row=0, column=0, sticky=tk.W)
 
         combo_nabywca_name = ttk.Combobox(window, width=25, textvariable=self.nabywca, font=("Calibri", 12))
@@ -446,7 +453,7 @@ class Menu(tk.Frame):
         ins = ttk.Style(self)
         ins.configure("ins.TButton", font=("Calibri", 12, "bold"))
         
-        ttk.Button(self, text="DODAJ", command = lambda: self.insert(master), style="ins.TButton").pack(side=tk.RIGHT, ipady=2, padx=10)
+        ttk.Button(self, text="DODAJ FAKTURĘ", command = lambda: self.insert(master), style="ins.TButton", width=25).pack(side=tk.RIGHT, ipady=2, padx=10)
 
 
     def insert(self, master):
@@ -479,12 +486,12 @@ class Menu(tk.Frame):
         cena_33 = self.cena_3.get()
         ilosc_33 = self.ilosc_3.get()
           
-        if numerr=="" or miejscee=="" or nabywcaa=="" or nazwaa=="" or iloscc=="":
+        if miejscee=="" or nabywcaa=="" or nazwaa=="" or iloscc=="":
             messagebox.showerror('Błąd','Wszystkie pola powinny zostać uzupełnione.')
         else:
             text = messagebox.showinfo('Sukces','Faktura została dodana.')
             if text:
-                query = (f"insert into invoice('number', 'sale_date', 'issue_date', 'place', 'choice', 'payment_date', 'nabywca', 'ulica', 'kod_miasto', 'vat', 'nazwa', 'ilosc', 'cena', 'nazwa_1', 'ilosc_1', 'cena_1', 'nazwa_2', 'ilosc_2', 'cena_2', 'nazwa_3', 'ilosc_3', 'cena_3') values ('{numerr}', '{miejscee}', '{sprzedazz}', '{wystawieniaa}', '{sposobb}', '{terminn}', '{nabywcaa}', '{ulicaa}', '{kod_miastoo}', '{osobaa}','{nazwaa}', '{iloscc}', '{cenaa}', '{nazwa_11}', '{ilosc_11}', '{cena_11}', '{nazwa_22}', '{ilosc_22}', '{cena_22}', '{nazwa_33}', '{ilosc_33}', '{cena_33}')")
+                query = (f"insert into invoice('number', 'sale_date', 'issue_date', 'place', 'choice', 'payment_date', 'nabywca', 'ulica', 'kod_miasto', 'vat', 'nazwa', 'ilosc', 'cena', 'nazwa_1', 'ilosc_1', 'cena_1', 'nazwa_2', 'ilosc_2', 'cena_2', 'nazwa_3', 'ilosc_3', 'cena_3') values ('{numerr}', '{sprzedazz}', '{wystawieniaa}', '{miejscee}', '{sposobb}', '{terminn}', '{nabywcaa}', '{ulicaa}', '{kod_miastoo}', '{osobaa}','{nazwaa}', '{iloscc}', '{cenaa}', '{nazwa_11}', '{ilosc_11}', '{cena_11}', '{nazwa_22}', '{ilosc_22}', '{cena_22}', '{nazwa_33}', '{ilosc_33}', '{cena_33}')")
                 with sqlite3.connect("database.db") as db:
                     c = db.cursor()
                     c.execute(query)
@@ -511,21 +518,17 @@ class Invoice(tk.Frame):
                 
         normal = ttk.Style(frame)
         normal.configure("normal.TButton", font=("Calibri", 14))
-
         bold = ttk.Style(frame)
         bold.configure("bo.TButton", font=("Calibri", 14, "bold"))
 
-        ttk.Label(frame, text="Faktura VAT - szczegóły", font=("Calibri", 24, "bold"), anchor="center").grid(pady=20, padx=232, columnspan=6)
-
+        ttk.Label(frame, text="Faktura VAT - szczegóły", font=("Calibri", 24, "bold"), anchor="center").grid(pady=20, padx=234, columnspan=6)
         ttk.Button(frame, text="ODŚWIEŻ", command=lambda: master.switch_frame(Invoice), style="normal.TButton").grid(padx=5, columnspan=6, sticky="nswe")
-
         ttk.Label(frame, text="TABELA Z FAKTURAMI", font=("Calibri", 14, "bold"), anchor="center").grid(pady=20, padx=0, columnspan=6)
 
         self.table(frame)
 
         ttk.Button(frame, text="COFNIJ", style="bo.TButton",
                    command=lambda: master.switch_frame(Menu)).grid(pady=10, padx=5, columnspan=6, sticky="nswe")
-
 
     def table(self, w):  
         limit = 8
@@ -564,17 +567,426 @@ class Invoice(tk.Frame):
                 f.grid(row=i+4, column=j + 3, pady=3)
             i = i + 1
 
-
+            
     def detail(self, id_invoice):
-        window = tk.TopLevel(self)
+        window = tk.Toplevel()
         window.resizable(0,0)
+        tk.Label(window, text="Szczegóły faktury nr "+str(id_invoice)).grid(sticky="nswe", pady=20)
 
-
+        
     def update(self, id_invoice):
-        window = tk.TopLevel(self)
+        window = tk.Toplevel()
         window.resizable(0,0)
+        
+        ttk.Label(window, text="Formularz edytowania faktury o numerze ID = "+str(id_invoice), font=("Calibri", 14, "bold")).pack(pady=20)
+
+        def combo_data():
+
+            con = sqlite3.connect('database.db')
+            c = con.cursor()
+            query = c.execute('SELECT nabywca FROM clients ORDER BY nabywca')
+
+            data = []
+            for row in c.fetchall():
+                data.append(row[0])
+            return data
+        
+
+        def combo_product():
+
+            con = sqlite3.connect('database.db')
+            c = con.cursor()
+            query = c.execute('SELECT name FROM products ORDER BY name')
+
+            data = []
+            for row in c.fetchall():
+                data.append(row[0])
+            return data
 
 
+        def details(event):
+
+            con = sqlite3.connect('database.db')
+            c = con.cursor()
+            query = c.execute("SELECT ulica, miasto_kod, osoba_fizyczna, nip, regon, vat_eu, pesel FROM clients WHERE nabywca='"+event.widget.get()+"' or c_id='"+str(id_invoice)+"'")
+
+            for row in query:
+                ulica_entry.config(state = tk.NORMAL)
+                ulica_entry.delete(0, tk.END)
+                ulica_entry.insert(0, row[0])
+                ulica_entry.config(state = "readonly")
+
+                kod_miasto_entry.config(state = tk.NORMAL)
+                kod_miasto_entry.delete(0, tk.END)
+                kod_miasto_entry.insert(0, row[1])
+                kod_miasto_entry.config(state = "readonly")
+
+                if row[2] == "T":
+                    osoba_entry.config(state = tk.NORMAL)
+                    osoba_entry.delete(0, tk.END)
+                    osoba_entry.insert(0, row[2])
+                    osoba_entry.config(state = "readonly")
+                    osoba_label = ttk.Label(window_frame,text="Osoba fizyczna:", font=("Calibri", 12))
+                    osoba_label.grid(padx=5, pady=5, row=1, column=2, sticky=tk.W)
+                elif len(row[3]) == 10:
+                    osoba_entry.config(state = tk.NORMAL)
+                    osoba_entry.delete(0, tk.END)
+                    osoba_entry.insert(0, row[3])
+                    osoba_entry.config(state = "readonly")
+                    osoba_label = ttk.Label(window_frame,text="NIP:                   ", font=("Calibri", 12))
+                    osoba_label.grid(padx=5, pady=5, row=1, column=2, sticky=tk.W)
+                elif len(row[4]) == 14:
+                    osoba_entry.config(state = tk.NORMAL)
+                    osoba_entry.delete(0, tk.END)
+                    osoba_entry.insert(0, row[4])
+                    osoba_entry.config(state = "readonly")
+                    osoba_label = ttk.Label(window_frame,text="REGON:                 ", font=("Calibri", 12))
+                    osoba_label.grid(padx=5, pady=5, row=1, column=2, sticky=tk.W)
+                elif len(row[5]) == 13:
+                    osoba_entry.config(state = tk.NORMAL)
+                    osoba_entry.delete(0, tk.END)
+                    osoba_entry.insert(0, row[5])
+                    osoba_entry.config(state = "readonly")
+                    osoba_label = ttk.Label(window_frame,text="VAT EU:                 ", font=("Calibri", 12))
+                    osoba_label.grid(padx=5, pady=5, row=1, column=2, sticky=tk.W)
+                elif len(row[6]) == 11:
+                    osoba_entry.config(state = tk.NORMAL)
+                    osoba_entry.delete(0, tk.END)
+                    osoba_entry.insert(0, row[6])
+                    osoba_entry.config(state = "readonly")
+                    osoba_label = ttk.Label(window_frame,text="PESEL:                 ", font=("Calibri", 12))
+                    osoba_label.grid(padx=5, pady=5, row=1, column=2, sticky=tk.W)
+                    
+            c.close()
+            con.close()
+
+
+        def detail_first(event):
+
+            con = sqlite3.connect('database.db')
+            c = con.cursor()
+            query = c.execute("SELECT price FROM products WHERE name='"+event.widget.get()+"'")
+
+            for row in query:
+                cena_e.config(state = tk.NORMAL)
+                cena_e.delete(0, tk.END)
+                cena_e.insert(0, row[0])
+                cena_e.config(state = "readonly")
+
+            c.close()
+            con.close()
+
+
+        def detail_second(event):
+
+            con = sqlite3.connect('database.db')
+            c = con.cursor()
+            query = c.execute("SELECT price FROM products WHERE name='"+event.widget.get()+"'")
+
+            for row in query:
+                cena_ee.config(state = tk.NORMAL)
+                cena_ee.delete(0, tk.END)
+                cena_ee.insert(0, row[0])
+                cena_ee.config(state = "readonly")
+
+            c.close()
+            con.close()
+
+            
+        def detail_third(event):
+
+            con = sqlite3.connect('database.db')
+            c = con.cursor()
+            query = c.execute("SELECT price FROM products WHERE name='"+event.widget.get()+"'")
+
+            for row in query:
+                cena_eee.config(state = tk.NORMAL)
+                cena_eee.delete(0, tk.END)
+                cena_eee.insert(0, row[0])
+                cena_eee.config(state = "readonly")
+
+            c.close()
+            con.close()
+
+            
+        def detail_fourth(event):
+
+            con = sqlite3.connect('database.db')
+            c = con.cursor()
+            query = c.execute("SELECT price FROM products WHERE name='"+event.widget.get()+"'")
+
+            for row in query:
+                cena_eeee.config(state = tk.NORMAL)
+                cena_eeee.delete(0, tk.END)
+                cena_eeee.insert(0, row[0])
+                cena_eeee.config(state = "readonly")
+
+            c.close()
+            con.close()
+            
+
+        style = ttk.Style(window)
+        style.configure("my.TButton", font=("Calibri", 19, "bold"))
+
+        szczegoly = ttk.Style(window)
+        szczegoly.configure("sz.TButton", font=("Calibri", 18))
+            
+        frame = ttk.LabelFrame(window, text="Dane do faktury")
+        frame.pack(padx=10, pady=0, fill="x")
+
+        window.numer = tk.StringVar(window)      
+        window.miejsce = tk.StringVar(window)       
+        window.sprzedaz = tk.StringVar(window)
+        window.wystawienia = tk.StringVar(window)
+        window.sposob = tk.StringVar(window)
+        window.termin = tk.StringVar(window)
+
+        db=sqlite3.connect('database.db')
+        c=db.cursor()
+        query=c.execute("SELECT number, issue_date, sale_date, place, choice, payment_date FROM invoice WHERE id='"+str(id_invoice)+"';")
+
+        for i in query:
+            numer_label = ttk.Label(frame, text="Numer faktury:", font=("Calibri", 12))
+            numer_label.grid(padx=5, pady=5, row=0, column=0, sticky=tk.W)
+            numer_entry = ttk.Entry(frame, width=27, textvariable=window.numer, font=("Calibri", 12))
+            numer_entry.insert(0, i[0])
+            numer_entry.grid(padx=5, pady=5, row=0, column=1, sticky=tk.W)
+
+            wystawiona_label = ttk.Label(frame, text="Data wystawienia:", font=("Calibri", 12))
+            wystawiona_label.grid(padx=5, pady=5, row=1, column=0, sticky=tk.W)
+            wystawiona_entry = DateEntry(frame, width=25, textvariable=window.wystawienia,  font=("Calibri", 12), locale='en_US', date_pattern='dd-mm-y')
+            wystawiona_entry.delete(0, "end")
+            wystawiona_entry.insert(0, i[1])
+            wystawiona_entry.grid(padx=5, pady=5, row=1, column=1, sticky=tk.W)
+
+            sprzedaz_label = ttk.Label(frame, text="Data sprzedaży:", font=("Calibri", 12))
+            sprzedaz_label.grid(padx=5, pady=5, row=0, column=2, sticky=tk.W)
+            sprzedaz_entry = DateEntry(frame, width=25, textvariable=window.sprzedaz, font=("Calibri", 12), locale='en_US', date_pattern='dd-mm-y')
+            sprzedaz_entry.delete(0, "end")
+            sprzedaz_entry.insert(0, i[2])
+            sprzedaz_entry.grid(padx=5, pady=5, row=0, column=3, sticky=tk.W)
+
+            miejsce_label = ttk.Label(frame, text="Miejsce wystawienia:", font=("Calibri", 12))
+            miejsce_label.grid(padx=5, pady=5, row=1, column=2, sticky=tk.W)
+            miejsce_entry = ttk.Entry(frame, width=27, textvariable=window.miejsce, font=("Calibri", 12))
+            miejsce_entry.insert(0, i[3])
+            miejsce_entry.grid(padx=5, pady=5, row=1, column=3, sticky=tk.W)
+
+            sposob_label = ttk.Label(frame, text="Sposób zapłaty:", font=("Calibri", 12))
+            sposob_label.grid(padx=5, pady=5, row=2, column=0, sticky=tk.W)
+                
+            sposob_combobox = ttk.Combobox(frame, textvariable=window.sposob, font=("Calibri", 12), width=25)
+            sposob_combobox.grid(padx=5, pady=5, row=2, column=1, sticky=tk.W)
+            sposob_combobox['values'] = ('Gotówka', ' Przelew') 
+            sposob_combobox.insert(0, i[4]) 
+
+            termin_label = ttk.Label(frame, text="Termin zapłaty:", font=("Calibri", 12))
+            termin_label.grid(padx=5, pady=5, row=2, column=2, sticky=tk.W)
+            termin_entry = DateEntry(frame, width=25, textvariable=window.termin,  font=("Calibri", 12), locale='en_US', date_pattern='dd-mm-y')
+            termin_entry.delete(0, "end")
+            termin_entry.insert(0, i[5])
+            termin_entry.grid(padx=5, pady=5, row=2, column=3, sticky=tk.W)
+
+        window_frame = ttk.LabelFrame(window, text="Klienci")
+        window_frame.pack(padx=10, pady=5, fill="x")
+
+        window.nabywca = tk.StringVar(window)
+        window.ulica = tk.StringVar(window)
+        window.kod_miasto = tk.StringVar(window) 
+        window.osoba = tk.StringVar(window)
+
+        query=c.execute("SELECT nabywca, ulica, kod_miasto, vat FROM invoice WHERE id='"+str(id_invoice)+"';")
+
+        for i in query:
+            ulica_label = ttk.Label(window_frame, width=17, text="Ulica:", font=("Calibri", 12))
+            ulica_label.grid(padx=5, pady=5, row=0, column=2, sticky=tk.W)
+            ulica_entry = ttk.Entry(window_frame, width=27, textvariable=window.ulica, font=("Calibri", 12))
+            ulica_entry.insert(0, i[1])
+            ulica_entry.grid(padx=5, pady=5, row=0, column=3, sticky=tk.W)
+
+            kod_miasto_label = ttk.Label(window_frame,text="Kod/miasto:", font=("Calibri", 12))
+            kod_miasto_label.grid(padx=5, pady=5, row=1, column=0, sticky=tk.W)
+            kod_miasto_entry = ttk.Entry(window_frame, width=27, textvariable=window.kod_miasto, font=("Calibri", 12))
+            kod_miasto_entry.insert(0, i[2])
+            kod_miasto_entry.grid(padx=5, pady=5, row=1, column=1, sticky=tk.W)
+
+            osoba_entry = ttk.Entry(window_frame, width=27, textvariable=window.osoba, font=("Calibri", 12))
+            osoba_entry.insert(0, i[3])
+            osoba_entry.grid(padx=5, pady=5, row=1, column=3, sticky=tk.W)
+                    
+            nabywca_name = ttk.Label(window_frame, width=15, text="Nabywca:", font=("Calibri", 12))
+            nabywca_name.grid(padx=5, pady=5, row=0, column=0, sticky=tk.W)
+            combo_nabywca_name = ttk.Combobox(window_frame, width=25, textvariable=window.nabywca, font=("Calibri", 12))
+            combo_nabywca_name.grid(padx=5, pady=5, row=0, column=1, sticky=tk.W)
+            combo_nabywca_name['values'] = combo_data()
+            combo_nabywca_name.bind("<<ComboboxSelected>>", details)
+            combo_nabywca_name.insert(0, i[0])
+
+        style = ttk.Style()
+        style.configure("font.TButton", font=("Calibri", 12))
+
+        products = ttk.LabelFrame(window, text="Produkty")
+        products.pack(padx=10, pady=5, fill="x")
+           
+        window.nazwa = tk.StringVar(window)
+        window.cena = tk.StringVar(window)
+        window.ilosc = tk.StringVar(window)
+
+        query=c.execute("SELECT nazwa, ilosc, cena FROM invoice WHERE id='"+str(id_invoice)+"';")
+
+        for i in query:                  
+            nazwa_l = ttk.Label(products, text="Nazwa:", font=("Calibri", 12))
+            nazwa_l.grid(padx=5, pady=5, row=0, column=0, sticky=tk.W)
+            nazwa_c = ttk.Combobox(products, textvariable=window.nazwa, font=("Calibri", 12))
+            nazwa_c.grid(padx=5, pady=5, row=0, column=1, sticky=tk.W)
+            nazwa_c['values'] = combo_product()
+            nazwa_c.bind("<<ComboboxSelected>>", detail_first)
+            nazwa_c.insert(0, i[0])
+
+            style = ttk.Style()
+            style.configure("font.TButton", font=("Calibri", 12))
+
+            ilosc_l = ttk.Label(products,text="Ilość:", font=("Calibri", 12))
+            ilosc_l.grid(padx=5, pady=5, row=0, column=2, sticky=tk.W)
+            ilosc_e = ttk.Entry(products, textvariable=window.ilosc, font=("Calibri", 12))
+            ilosc_e.insert(0, i[1])
+            ilosc_e.grid(padx=5, pady=5, row=0, column=3, sticky=tk.W)
+            
+            cena_l = ttk.Label(products,text="Cena netto:", font=("Calibri", 12))
+            cena_l.grid(padx=5, pady=5, row=0, column=4, sticky=tk.W)
+            cena_e = ttk.Entry(products, textvariable=window.cena, font=("Calibri", 12))
+            cena_e.insert(0, i[2])
+            cena_e.grid(padx=5, pady=5, row=0, column=5, sticky=tk.W)
+
+        window.nazwa_1 = tk.StringVar(window)
+        window.cena_1 = tk.StringVar(window)
+        window.ilosc_1 = tk.StringVar(window)
+
+        query=c.execute("SELECT nazwa_1, ilosc_1, cena_1 FROM invoice WHERE id='"+str(id_invoice)+"';")
+
+        for i in query:
+            nazwa_ll = ttk.Label(products, text="Nazwa:", font=("Calibri", 12))
+            nazwa_ll.grid(padx=5, pady=5, row=1, column=0, sticky=tk.W)
+            nazwa_cc = ttk.Combobox(products, textvariable=window.nazwa_1, font=("Calibri", 12))
+            nazwa_cc.grid(padx=5, pady=5, row=1, column=1, sticky=tk.W)
+            nazwa_cc['values'] = combo_product()
+            nazwa_cc.bind("<<ComboboxSelected>>", detail_second)
+            nazwa_cc.insert(0, i[0])
+
+            ilosc_ll = ttk.Label(products,text="Ilość:", font=("Calibri", 12))
+            ilosc_ll.grid(padx=5, pady=5, row=1, column=2, sticky=tk.W)
+            ilosc_ee = ttk.Entry(products, textvariable=window.ilosc_1, font=("Calibri", 12))
+            ilosc_ee.grid(padx=5, pady=5, row=1, column=3, sticky=tk.W)
+            ilosc_ee.insert(0, [1])
+
+            cena_ll = ttk.Label(products,text="Cena netto:", font=("Calibri", 12))
+            cena_ll.grid(padx=5, pady=5, row=1, column=4, sticky=tk.W)
+            cena_ee = ttk.Entry(products, textvariable=window.cena_1, font=("Calibri", 12))
+            cena_ee.grid(padx=5, pady=5, row=1, column=5, sticky=tk.W)
+            cena_ee.insert(0, i[2])
+
+        window.nazwa_2 = tk.StringVar(window)
+        window.cena_2 = tk.StringVar(window)
+        window.ilosc_2 = tk.StringVar(window)
+
+        query=c.execute("SELECT nazwa_2, ilosc_2, cena_2 FROM invoice WHERE id='"+str(id_invoice)+"';")
+
+        for i in query:            
+            nazwa_lll = ttk.Label(products, text="Nazwa:", font=("Calibri", 12))
+            nazwa_lll.grid(padx=5, pady=5, row=2, column=0, sticky=tk.W)
+            nazwa_ccc = ttk.Combobox(products, textvariable=window.nazwa_2, font=("Calibri", 12))
+            nazwa_ccc.grid(padx=5, pady=5, row=2, column=1, sticky=tk.W)
+            nazwa_ccc['values'] = combo_product()
+            nazwa_ccc.bind("<<ComboboxSelected>>", detail_third)
+            nazwa_ccc.insert(0, i[0])
+
+            ilosc_lll = ttk.Label(products,text="Ilość:", font=("Calibri", 12))
+            ilosc_lll.grid(padx=5, pady=5, row=2, column=2, sticky=tk.W)
+            ilosc_eee = ttk.Entry(products, textvariable=window.ilosc_2, font=("Calibri", 12))
+            ilosc_eee.grid(padx=5, pady=5, row=2, column=3, sticky=tk.W)
+            ilosc_eee.insert(0, i[1])
+
+            cena_lll = ttk.Label(products,text="Cena netto:", font=("Calibri", 12))
+            cena_lll.grid(padx=5, pady=5, row=2, column=4, sticky=tk.W)
+            cena_eee = ttk.Entry(products, textvariable=window.cena_2, font=("Calibri", 12))
+            cena_eee.grid(padx=5, pady=5, row=2, column=5, sticky=tk.W)
+            cena_eee.insert(0, i[2])
+
+        window.nazwa_3 = tk.StringVar(window)
+        window.cena_3 = tk.StringVar(window)
+        window.ilosc_3 = tk.StringVar(window)
+
+        query=c.execute("SELECT nazwa_3, ilosc_3, cena_3 FROM invoice WHERE id='"+str(id_invoice)+"';")
+                    
+        for i in query:
+            nazwa_llll = ttk.Label(products, text="Nazwa:", font=("Calibri", 12))
+            nazwa_llll.grid(padx=5, pady=5, row=3, column=0, sticky=tk.W)
+            nazwa_cccc = ttk.Combobox(products, textvariable=window.nazwa_3, font=("Calibri", 12))
+            nazwa_cccc.grid(padx=5, pady=5, row=3, column=1, sticky=tk.W)
+            nazwa_cccc['values'] = combo_product()
+            nazwa_cccc.bind("<<ComboboxSelected>>", detail_fourth)
+            nazwa_cccc.insert(0, i[0])
+
+            ilosc_llll = ttk.Label(products,text="Ilość:", font=("Calibri", 12))
+            ilosc_llll.grid(padx=5, pady=5, row=3, column=2, sticky=tk.W)
+            ilosc_eeee = ttk.Entry(products, textvariable=window.ilosc_3, font=("Calibri", 12))
+            ilosc_eeee.grid(padx=5, pady=5, row=3, column=3, sticky=tk.W)
+            ilosc_eeee.insert(0, i[1])
+
+            cena_llll = ttk.Label(products,text="Cena netto:", font=("Calibri", 12))
+            cena_llll.grid(padx=5, pady=5, row=3, column=4, sticky=tk.W)
+            cena_eeee = ttk.Entry(products, textvariable=window.cena_3, font=("Calibri", 12))
+            cena_eeee.grid(padx=5, pady=5, row=3, column=5, sticky=tk.W)
+            cena_eeee.insert(0, i[2])
+
+
+        def updatedetail(id_invoice):
+            
+            numerr = window.numer.get()
+            miejscee = window.miejsce.get()
+            sprzedazz = window.sprzedaz.get()
+            wystawieniaa = window.wystawienia.get()
+            sposobb = window.sposob.get()
+            terminn = window.termin.get()
+
+            nabywcaa = window.nabywca.get()
+            ulicaa = window.ulica.get()
+            kod_miastoo = window.kod_miasto.get()
+            osobaa = window.osoba.get()
+
+            nazwaa = window.nazwa.get()
+            cenaa = window.cena.get()
+            iloscc = window.ilosc.get()
+
+            nazwaa_11 = window.nazwa_1.get()
+            cenaa_11 = window.cena_1.get()
+            iloscc_11 = window.ilosc_1.get()
+                
+            nazwaa_22 = window.nazwa_2.get()
+            cenaa_22 = window.cena_2.get()
+            iloscc_22 = window.ilosc_2.get()
+
+            nazwaa_33 = window.nazwa_3.get()
+            cenaa_33 = window.cena_3.get()
+            iloscc_33 = window.ilosc_3.get()
+            
+            if numerr=="" or miejscee=="" or sprzedazz=="" or wystawieniaa=="" or sposobb=="" or terminn=="" or nabywcaa=="" or ulicaa=="" or kod_miastoo=="" or osobaa=="" or nazwaa=="" or cenaa=="" or iloscc=="":
+                messagebox.showerror('Błąd','Wszystkie pola powinny zostać uzupełnione.')
+            else:
+                db=sqlite3.connect('database.db')
+                c=db.cursor()
+                c.execute("update invoice set number='"+numerr+"',sale_date='"+sprzedazz+"', issue_date='"+wystawieniaa+"', place='"+miejscee+"', choice='"+sposobb+"', payment_date='"+terminn+"', nabywca='"+nabywcaa+"', ulica='"+ulicaa+"', kod_miasto='"+kod_miastoo+"', vat='"+osobaa+"', nazwa='"+nazwaa+"', ilosc='"+iloscc+"', cena='"+cenaa+"', nazwa_1='"+nazwaa_11+"', ilosc_1='"+iloscc_11+"', cena_1='"+cenaa_11+"', nazwa_2='"+nazwaa_22+"', ilosc_2='"+iloscc_22+"', cena_2='"+cenaa_22+"', nazwa_3='"+nazwaa_33+"', ilosc_3='"+iloscc_33+"', cena_3='"+cenaa_33+"' where id='"+str(id_invoice)+"';")
+                db.commit()
+                db.close()
+                window.withdraw()
+                messagebox.showinfo('Sukces','Produkt został zaktualizowany.')
+
+        bu = ttk.Style(window)
+        bu.configure("bu.TButton", font=("Calibri", 12, "bold"))
+
+        ttk.Button(window, text="EDYTUJ FAKTURĘ", command=lambda: updatedetail(id_invoice), style="bu.TButton").pack(pady=10, padx=20, fill="x", ipady=2)
+
+        
     def delete(self, id_invoice):
         text=messagebox.askyesnocancel("Usuń","Czy na pewno chcesz usunąć fakture?",icon='warning',default='no')
         if text:
@@ -582,8 +994,8 @@ class Invoice(tk.Frame):
                 c = db.cursor()
                 c.execute(f"delete from invoice where id = {id_invoice}")
                 c.close()
+        
 
-            
 
 ### Widok KONTA UŻYTKOWNIKA ###
 
@@ -915,28 +1327,35 @@ class Client(tk.Frame):
         okno.wybor2 = tk.StringVar(okno)
         okno.id = tk.StringVar(okno)
 
+        ttk.Label(okno, text="Formularz dodawania klienta", font=("Calibri", 12, "bold")).pack(padx=0, pady=10)
+
         frame_napisy = tk.Frame(okno)  # Ramka z napisami pol
         frame_napisy.pack(side="left", fill="both")
-        tk.Label(frame_napisy, text="Nabywca").pack(pady = 5, padx = 5)
-        tk.Label(frame_napisy, text="Ulica").pack(pady = 5, padx = 5)
-        tk.Label(frame_napisy, text="Miasto").pack(pady = 5, padx = 5)
-        tk.Label(frame_napisy, text="Kod").pack(pady = 5, padx = 5)
+        ttk.Label(frame_napisy, text="Nabywca", font=("Calibri", 12)).pack(pady = 6, padx = 5, anchor="w")
+        ttk.Label(frame_napisy, text="Ulica", font=("Calibri", 12)).pack(pady = 6, padx = 5, anchor="w")
+        ttk.Label(frame_napisy, text="Miasto", font=("Calibri", 12)).pack(pady = 6, padx = 5, anchor="w")
+        ttk.Label(frame_napisy, text="Kod", font=("Calibri", 12)).pack(pady = 6, padx = 5, anchor="w")
 
-        choices = ("NIP", "REGON", "VAT EU", "PESEL", "Numer firmy", "Osoba fizyczna")
+        menu = ttk.Style(okno)
+        menu.configure("menu.TMenubutton", font=("Calibri", 12))
+
+        choices = ("Osoba fizyczna", "NIP", "REGON", "VAT EU", "PESEL", "Numer firmy")
         okno.variable = tk.StringVar(okno)
         okno.variable.set("Osoba fizyczna")
-        tk.OptionMenu(frame_napisy, okno.variable, *choices, command=self.choice).pack(pady = 5, padx = 5)
+        ttk.OptionMenu(frame_napisy, okno.variable, *choices, command=self.choice, style="menu.TMenubutton").pack(pady = 6, padx = 0, anchor="w")
 
         frame_entry = tk.Frame(okno)  # Ramka z polami
         frame_entry.pack(side="left", fill="both")
-        tk.Entry(frame_entry, textvariable=okno.nabywca).pack(pady = 5, padx = 5)
-        tk.Entry(frame_entry, textvariable=okno.ulica).pack(pady = 8, padx = 5)
-        tk.Entry(frame_entry, textvariable=okno.miasto).pack(pady = 4, padx = 5)
-        tk.Entry(frame_entry, textvariable=okno.kod).pack(pady = 9, padx = 5)
-        self.pole_do_wpisania_wyboru = tk.Entry(frame_entry, textvariable=okno.wybor2)
+        ttk.Entry(frame_entry, textvariable=okno.nabywca, font=("Calibri", 12), width=25).pack(pady = 5, padx = 5)
+        ttk.Entry(frame_entry, textvariable=okno.ulica, font=("Calibri", 12), width=25).pack(pady = 5, padx = 5)
+        ttk.Entry(frame_entry, textvariable=okno.miasto, font=("Calibri", 12), width=25).pack(pady = 5, padx = 5)
+        ttk.Entry(frame_entry, textvariable=okno.kod, font=("Calibri", 12), width=25).pack(pady = 5, padx = 5)
+        self.pole_do_wpisania_wyboru = ttk.Entry(frame_entry, textvariable=okno.wybor2, font=("Calibri", 12), width=25)
 
-
-        tk.Button(okno, text="ZAPISZ", command=lambda : self.zapisz(okno) ).pack(side="bottom", pady = 5, padx = 5)
+        bu = ttk.Style(okno)
+        bu.configure("bu.TButton", font=("Calibri", 12))
+        
+        ttk.Button(frame_napisy, text="ZAPISZ", command=lambda : self.zapisz(okno), width=15, style="bu.TButton").pack(side="bottom", pady = 6, padx = 5)
         
             
     def zapisz(self, okno):
@@ -1045,11 +1464,11 @@ class Client(tk.Frame):
                     self.e.insert(-1, i[j])
                     self.e.pack(pady=1, padx=5)
 
-            button = ttk.Button(frame_napisy, text="Aktualizuj", command= lambda : self.query_update(id_client), style="nor.TButton", width=15)
+            button = ttk.Button(frame_napisy, text="Aktualizuj", command= lambda : self.query_update(window, id_client), style="nor.TButton", width=15)
             button.pack(side="bottom", pady=10, padx=10)
 
 
-    def query_update(self, id_client):  # Komenda update
+    def query_update(self, window, id_client):  # Komenda update
         miasto_kod = self.nowy_kod.get() + " " + self.nowe_miasto.get()
         if self.nowy_nabywca.get()=="" or self.nip.get()=="" or self.regon.get()=="" or self.vat_eu.get()=="" or self.pesel.get()=="" or self.numer_firmy.get()=="" or self.osoba_fizyczna.get()=="" or self.nowa_ulica.get()=="" or miasto_kod=="":
             messagebox.showerror('Błąd', 'Sprawdź, czy wszystkie pola zostały uzupełnione.')
@@ -1060,6 +1479,7 @@ class Client(tk.Frame):
                 c.execute(query)
                 c.close()
                 messagebox.showinfo('Sukces','Klient został zaktualizowany.')
+            window.destroy()
             
 
     def choice(self, v):  # Dodanie pola po wyborze innym niz osoba fizyczna
