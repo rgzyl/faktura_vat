@@ -1,7 +1,7 @@
 # Faktura VAT
 <p> <strong>Przedmiot:</strong> Zespołowy projekt programistyczny </p>
-<p> <strong>Rodzaj:</strong> aplikacja desktopowa </p>
-<p> <strong>Język programowania:</strong> python</p>
+<p> <strong>Rodzaj:</strong> Aplikacja desktopowa </p>
+<p> <strong>Język programowania:</strong> Python</p>
 <p> <strong>Funkcjonalności:</strong> </p>
 <ul>
   <li>Generowanie plików PDF z utworzonych faktur</li>
