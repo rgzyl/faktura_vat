@@ -1,0 +1,2 @@
+id,number,sale_date,issue_date,place,choice,payment_date,nabywca,ulica,kod_miasto,vat,nazwa,ilosc,cena,stawka,nazwa_1,ilosc_1,cena_1,stawka_1,nazwa_2,ilosc_2,cena_2,stawka_2,nazwa_3,ilosc_3,cena_3,stawka_3
+1,1,27-12-2020,27-12-2020,Wroclaw,Przelew,27-12-2020,Radoslaw Gzyl,Olszowa 14,58-150 Strzegom,T,Sofa,1,999.99,23.0,,,,,,,,,,,,
